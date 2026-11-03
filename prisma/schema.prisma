@@ -1,0 +1,200 @@
+// All money is stored as integer paise. Prices are per PIECE; orders are in whole CASES.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  RETAILER
+  DESK
+}
+
+enum SchemeType {
+  FREE_GOODS    // buy `buyQty` cases, get `freeQty` free
+  SLAB_PERCENT  // `percentBp` basis points off when qty >= `minQty` cases
+}
+
+enum OrderStatus {
+  PLACED     // retailer placed, within credit, awaiting desk check
+  ON_HOLD    // blocked by credit limit, desk must release
+  CONFIRMED  // desk checked
+  EXPORTED   // included in a Tally export
+  CANCELLED
+}
+
+enum OrderSource {
+  CATALOGUE
+  AI_TEXT
+}
+
+enum CaptureStatus {
+  DRAFT
+  CONFIRMED
+  DISCARDED
+}
+
+model Retailer {
+  id               String   @id @default(cuid())
+  name             String
+  shopName         String
+  phone            String   @unique // E.164, e.g. +919000000001
+  city             String
+  creditLimitPaise Int
+  outstandingPaise Int      @default(0)
+  tallyLedgerName  String?
+  createdAt        DateTime @default(now())
+
+  users    User[]
+  prices   RetailerPrice[]
+  orders   Order[]
+  aliases  Alias[]
+  captures AiCapture[]
+}
+
+model User {
+  id           String    @id @default(cuid())
+  role         Role
+  name         String
+  email        String?   @unique // desk login
+  passwordHash String?
+  retailerId   String?
+  retailer     Retailer? @relation(fields: [retailerId], references: [id])
+  createdAt    DateTime  @default(now())
+}
+
+model Sku {
+  id            String  @id @default(cuid())
+  code          String  @unique
+  name          String
+  nameHi        String?
+  brand         String
+  piecesPerCase Int
+  pricePaise    Int // dealer price per piece, GST-exclusive
+  gstRateBp     Int // 1200 = 12%
+  stockCases    Int
+  imageUrl      String?
+  active        Boolean @default(true)
+
+  schemes       Scheme[]
+  retailerPrice RetailerPrice[]
+  orderLines    OrderLine[]
+  aliases       Alias[]
+}
+
+// Per-retailer override of the dealer price (per piece, GST-exclusive).
+model RetailerPrice {
+  retailerId String
+  skuId      String
+  pricePaise Int
+  retailer   Retailer @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+  sku        Sku      @relation(fields: [skuId], references: [id], onDelete: Cascade)
+
+  @@id([retailerId, skuId])
+}
+
+model Scheme {
+  id         String     @id @default(cuid())
+  skuId      String
+  type       SchemeType
+  buyQty     Int? // FREE_GOODS
+  freeQty    Int? // FREE_GOODS
+  minQty     Int? // SLAB_PERCENT
+  percentBp  Int? // SLAB_PERCENT, 300 = 3%
+  label      String
+  active     Boolean    @default(true)
+  validFrom  DateTime?
+  validUntil DateTime?
+  sku        Sku        @relation(fields: [skuId], references: [id], onDelete: Cascade)
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  number        String      @unique // human readable, e.g. RD-000123
+  idempotencyKey String?    @unique // client-generated; a double tap cannot create two orders
+  retailerId    String
+  status        OrderStatus
+  source        OrderSource @default(CATALOGUE)
+  subtotalPaise Int
+  discountPaise Int
+  gstPaise      Int
+  totalPaise    Int
+  holdReason    String?
+  note          String?
+  rawMessage    String? // original message when captured by AI
+  createdAt     DateTime    @default(now())
+  confirmedAt   DateTime?
+  exportedAt    DateTime?
+
+  retailer Retailer    @relation(fields: [retailerId], references: [id])
+  lines    OrderLine[]
+
+  @@index([status, createdAt])
+  @@index([retailerId, createdAt])
+}
+
+model OrderLine {
+  id               String  @id @default(cuid())
+  orderId          String
+  skuId            String
+  qtyCases         Int
+  freeCases        Int     @default(0)
+  unitPricePaise   Int // per piece at the time of order
+  grossPaise       Int
+  discountPaise    Int
+  gstPaise         Int
+  schemeLabel      String? // snapshot of the applied scheme
+  originalText     String? // AI: what the retailer actually wrote
+  confidence       Float?
+  order            Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  sku              Sku     @relation(fields: [skuId], references: [id])
+}
+
+// Learned per-retailer shorthand ("chhota biscuit" -> SKU-BS-075).
+model Alias {
+  id         String   @id @default(cuid())
+  retailerId String
+  phrase     String // normalised lower-case
+  skuId      String
+  createdAt  DateTime @default(now())
+  retailer   Retailer @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+  sku        Sku      @relation(fields: [skuId], references: [id], onDelete: Cascade)
+
+  @@unique([retailerId, phrase])
+}
+
+model AiCapture {
+  id         String        @id @default(cuid())
+  retailerId String
+  rawText    String
+  result     Json
+  status     CaptureStatus @default(DRAFT)
+  createdAt  DateTime      @default(now())
+  retailer   Retailer      @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+}
+
+// Generic sliding-window rate limiting (OTP requests, failed desk logins).
+model RateLimitHit {
+  id        String   @id @default(cuid())
+  key       String // e.g. "otp:+919000000001", "desk:ip:1.2.3.4"
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
+}
+
+// OTP codes are stored hashed, expire, are single-use and attempt-limited.
+model OtpChallenge {
+  id         String    @id @default(cuid())
+  phone      String
+  codeHash   String
+  expiresAt  DateTime
+  attempts   Int       @default(0)
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([phone, createdAt])
+}

@@ -1,0 +1,119 @@
+import "server-only";
+import { Prisma } from "@/generated/prisma/client";
+import { db } from "@/lib/db";
+import { loadCatalogue } from "@/lib/catalogue";
+import { buildOrder, type RequestedLine } from "./build";
+import { checkCredit } from "./credit";
+import { getCreditPosition } from "./exposure";
+import type { LineIssue } from "@/lib/pricing/types";
+
+export type PlaceResult =
+  | { ok: true; orderId: string; number: string; status: "PLACED" | "ON_HOLD"; duplicate: boolean }
+  | { ok: false; reason: "empty" | "unknown_sku" }
+  | { ok: false; reason: "stock"; issues: { skuId: string; issue: LineIssue }[] };
+
+class StockRace extends Error {
+  constructor(public skuId: string) {
+    super("stock changed while placing the order");
+  }
+}
+
+const isUniqueViolation = (e: unknown) =>
+  e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002";
+
+export async function placeOrder(input: {
+  retailerId: string;
+  lines: RequestedLine[];
+  note?: string;
+  idempotencyKey: string;
+  source?: "CATALOGUE" | "AI_TEXT";
+  rawMessage?: string;
+}): Promise<PlaceResult> {
+  // Scoped per retailer, so one shop's key can never collide with or reveal another's.
+  const key = `${input.retailerId}:${input.idempotencyKey}`;
+  const existing = await findByKey(key);
+  if (existing) return existing;
+
+  const catalogue = await loadCatalogue(input.retailerId);
+  const built = buildOrder(catalogue, input.lines);
+  if (!built.ok) return built;
+
+  const { priced } = built;
+  const position = await getCreditPosition(input.retailerId);
+  const credit = checkCredit(position.limitPaise, position.usedPaise, priced.totalPaise);
+  const status = credit.hold ? "ON_HOLD" : "PLACED";
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const order = await db.$transaction(async (tx) => {
+        // Reserve stock atomically: the update only matches while enough is left,
+        // so two retailers cannot both take the last cases.
+        for (const l of built.lines) {
+          const need = l.qtyCases + l.freeCases;
+          const res = await tx.sku.updateMany({
+            where: { id: l.skuId, stockCases: { gte: need } },
+            data: { stockCases: { decrement: need } },
+          });
+          if (res.count !== 1) throw new StockRace(l.skuId);
+        }
+        const number = `RD-${String((await tx.order.count()) + 1).padStart(6, "0")}`;
+        return tx.order.create({
+          data: {
+            number,
+            idempotencyKey: key,
+            retailerId: input.retailerId,
+            status,
+            source: input.source ?? "CATALOGUE",
+            holdReason: credit.reason,
+            note: input.note?.trim() || null,
+            rawMessage: input.rawMessage ?? null,
+            subtotalPaise: priced.subtotalPaise,
+            discountPaise: priced.discountPaise,
+            gstPaise: priced.gstPaise,
+            totalPaise: priced.totalPaise,
+            lines: {
+              create: built.lines.map((l) => ({
+                skuId: l.skuId,
+                qtyCases: l.qtyCases,
+                freeCases: l.freeCases,
+                unitPricePaise: l.item.unitPricePaise,
+                grossPaise: l.grossPaise,
+                discountPaise: l.discountPaise,
+                gstPaise: l.gstPaise,
+                schemeLabel: l.schemeLabel,
+              })),
+            },
+          },
+        });
+      });
+      return { ok: true, orderId: order.id, number: order.number, status, duplicate: false };
+    } catch (e) {
+      if (e instanceof StockRace) {
+        const fresh = buildOrder(await loadCatalogue(input.retailerId), input.lines);
+        return fresh.ok
+          ? { ok: false, reason: "stock", issues: [{ skuId: e.skuId, issue: { code: "OUT_OF_STOCK" } }] }
+          : fresh;
+      }
+      if (isUniqueViolation(e)) {
+        // Either a double submit (same key) or two orders took the same number.
+        const dup = await findByKey(key);
+        if (dup) return dup;
+        continue;
+      }
+      throw e;
+    }
+  }
+  throw new Error("Could not allocate an order number");
+}
+
+async function findByKey(key: string): Promise<PlaceResult | null> {
+  const o = await db.order.findUnique({ where: { idempotencyKey: key } });
+  if (!o) return null;
+  return {
+    ok: true,
+    orderId: o.id,
+    number: o.number,
+    status: o.status === "ON_HOLD" ? "ON_HOLD" : "PLACED",
+    duplicate: true,
+  };
+}

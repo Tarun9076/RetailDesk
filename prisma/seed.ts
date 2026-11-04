@@ -78,6 +78,8 @@ const RETAILERS: RetailerSeed[] = [
   { name: "Pooja Jain", shopName: "Jain Super Mart", phone: "+919000000004", city: "Jabalpur - Wright Town", creditLimit: 200_000, outstanding: 40_000, lastOrderDaysAgo: 3, orders: 10, priceOverrides: { "SKU-DT-1KG": 99, "SKU-BS-075": 7.95 } },
   { name: "Dinesh Patel", shopName: "Patel Kirana & General", phone: "+919000000005", city: "Jabalpur - Ranjhi", creditLimit: 60_000, outstanding: 15_000, lastOrderDaysAgo: 19, orders: 5 },
   { name: "Kavita Soni", shopName: "Soni Departmental Store", phone: "+919000000006", city: "Jabalpur - Vijay Nagar", creditLimit: 90_000, outstanding: 0, lastOrderDaysAgo: 27, orders: 4 },
+  // A new shop that has signed up but never ordered: the desk should still see it.
+  { name: "Rajesh Tiwari", shopName: "Tiwari Provision Store", phone: "+919000000007", city: "Jabalpur - Adhartal", creditLimit: 50_000, outstanding: 0, lastOrderDaysAgo: 0, orders: 0 },
 ];
 
 const OPEN_ORDERS: Record<string, number> = {

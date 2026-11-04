@@ -12,6 +12,10 @@ const TABS = [
   { key: "done", label: "Done", statuses: ["EXPORTED", "CANCELLED"] as const },
 ];
 
+/** One column layout shared by the header row and every order row, so they always line up. */
+const ROW_GRID =
+  "lg:grid lg:grid-cols-[7rem_minmax(0,1.4fr)_10rem_6rem_minmax(0,1.2fr)_9rem]";
+
 const EMPTY: Record<string, string> = {
   attention: "Nothing waiting. New orders from shops will appear here.",
   ready: "No confirmed orders are waiting for export.",
@@ -72,39 +76,49 @@ export default async function DeskQueue(props: PageProps<"/desk">) {
           <p className="mt-4 text-muted">{EMPTY[tab.key]}</p>
         </div>
       ) : (
-        <ul className="mt-4 divide-y divide-line rounded-2xl border border-line">
-          {orders.map((o) => (
-            <li key={o.id}>
-              <Link
-                href={`/desk/orders/${o.id}`}
-                className="flex flex-col gap-2 p-4 hover:bg-surface sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div className="min-w-0">
-                  <p className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold">{o.number}</span>
+        <div className="mt-4 overflow-hidden rounded-2xl border border-line">
+          {/* Column names only where there is room for columns. */}
+          <div className={`hidden bg-surface px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted lg:gap-4 ${ROW_GRID}`}>
+            <span>Order</span>
+            <span>Shop</span>
+            <span>Placed</span>
+            <span>Items</span>
+            <span>Status</span>
+            <span className="text-right">Total</span>
+          </div>
+          <ul className="divide-y divide-line">
+            {orders.map((o) => (
+              <li key={o.id}>
+                <Link
+                  href={`/desk/orders/${o.id}`}
+                  className={`flex flex-col gap-1.5 px-4 py-4 hover:bg-surface sm:px-5 ${ROW_GRID} lg:items-center lg:gap-4`}
+                >
+                  <span className="font-semibold">{o.number}</span>
+                  <span className="min-w-0 truncate text-sm">
+                    {o.retailer.shopName}
+                    <span className="text-muted"> · {o.retailer.city}</span>
+                  </span>
+                  <span className="text-sm text-muted">{formatDateTime(o.createdAt)}</span>
+                  <span className="text-sm text-muted">
+                    {o._count.lines} {o._count.lines === 1 ? "item" : "items"}
+                  </span>
+                  <span className="flex flex-wrap items-center gap-2">
                     <DeskStatus status={o.status} />
                     {o.source === "AI_TEXT" && (
                       <span className="rounded-full bg-violet-50 px-2.5 py-1 text-xs font-medium text-violet-800">
                         AI captured
                       </span>
                     )}
-                  </p>
-                  <p className="mt-1 truncate text-sm">
-                    {o.retailer.shopName}
-                    <span className="text-muted"> · {o.retailer.city}</span>
-                  </p>
-                  <p className="text-sm text-muted">
-                    {formatDateTime(o.createdAt)} · {o._count.lines} {o._count.lines === 1 ? "item" : "items"}
-                  </p>
-                  {o.status === "ON_HOLD" && o.holdReason && (
-                    <p className="mt-1 text-sm font-medium text-amber-800">{o.holdReason}</p>
-                  )}
-                </div>
-                <p className="text-lg font-semibold sm:text-right">{formatPaise(o.totalPaise)}</p>
-              </Link>
-            </li>
-          ))}
-        </ul>
+                    {o.status === "ON_HOLD" && o.holdReason && (
+                      <span className="text-sm font-medium text-amber-800">{o.holdReason}</span>
+                    )}
+                  </span>
+                  <span className="text-lg font-semibold lg:text-right">{formatPaise(o.totalPaise)}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );

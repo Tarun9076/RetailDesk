@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { PasswordField } from "@/components/password-field";
 import { Button, ErrorNote, Field } from "@/components/ui";
 import { fmt, type Dict } from "@/lib/i18n/dict";
 
@@ -41,11 +42,12 @@ export function DeskLoginForm({ t }: { t: Dict["desk"] }) {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <Field id="email" name="email" type="email" label={t.email} autoComplete="username" required />
-      <Field
+      <PasswordField
         id="password"
         name="password"
-        type="password"
         label={t.password}
+        showLabel={t.showPassword}
+        hideLabel={t.hidePassword}
         autoComplete="current-password"
         required
       />

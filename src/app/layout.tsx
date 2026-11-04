@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { InstallProvider } from "@/components/install/install-provider";
 import { RegisterSW } from "@/components/register-sw";
 import { getLang } from "@/lib/i18n/server";
 import "./globals.css";
@@ -29,7 +30,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang={lang} className="h-full antialiased">
       <body className="min-h-full flex flex-col">
-        {children}
+        <InstallProvider>{children}</InstallProvider>
         <RegisterSW />
       </body>
     </html>

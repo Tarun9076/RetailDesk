@@ -121,7 +121,7 @@ export default async function LoadingListPage(props: PageProps<"/desk/loading">)
 
           <section className="mt-8">
             <h2 className="text-lg font-semibold">Drops by shop</h2>
-            <ul className="mt-3 grid gap-3 sm:grid-cols-2">
+            <ul className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
               {stops.map((s, i) => (
                 <li key={s.numbers[0]} className="break-inside-avoid rounded-2xl border border-line p-4">
                   <p className="font-semibold">

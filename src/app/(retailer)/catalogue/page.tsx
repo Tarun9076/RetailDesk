@@ -1,4 +1,3 @@
-import { InstallPrompt } from "@/components/install-prompt";
 import { CatalogueView } from "@/components/retailer/catalogue-view";
 import { requireRetailer } from "@/lib/auth/dal";
 import { getDict } from "@/lib/i18n/server";
@@ -10,7 +9,6 @@ export default async function CataloguePage() {
   const [{ t }, credit] = await Promise.all([getDict(), getCreditPosition(retailer.id)]);
   return (
     <>
-      <InstallPrompt t={t.install} />
       <p className="mb-4 text-sm text-muted">
         {t.catalogue.credit}:{" "}
         <span className={`font-medium ${credit.availablePaise < 0 ? "text-danger" : "text-ink"}`}>

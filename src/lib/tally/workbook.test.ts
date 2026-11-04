@@ -2,7 +2,7 @@ import ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
 import { priceLine } from "@/lib/pricing/engine";
 import { DEFAULT_TALLY_CONFIG, buildVoucher, rupees, type TallyLine, type TallyOrder } from "./voucher";
-import { buildSalesWorkbook, figuresFor } from "./workbook";
+import { buildSalesWorkbook, figuresFor, itemsSummary } from "./workbook";
 
 const NOW = new Date("2026-11-04T10:00:00Z");
 
@@ -135,7 +135,19 @@ describe("buildSalesWorkbook", () => {
     const o = order({ partyLedger: "Ram & Sons <Kirana>", note: `Deliver "early" & fast` });
     const row = (await read([o])).getWorksheet("Vouchers")!.getRow(2);
     expect(row.getCell("C").value).toBe("Ram & Sons <Kirana>");
-    expect(row.getCell("N").value).toBe(`Deliver "early" & fast`);
+    expect(row.getCell("O").value).toBe(`Deliver "early" & fast`);
+  });
+
+  it("lists what was ordered on the voucher row itself, one item per line, with free cases", async () => {
+    const row = (await read([order()])).getWorksheet("Vouchers")!.getRow(2);
+    expect(row.getCell("N").value).toBe("10 x Glucose biscuit 75 g (+1 free)\n5 x Detergent powder 1 kg");
+    expect(itemsSummary(order({ lines: [salt] }))).toBe("2 x Iodised salt 1 kg");
+  });
+
+  it("does not touch the totals row or the money columns", async () => {
+    const total = (await read([order()])).getWorksheet("Vouchers")!.getRow(3);
+    expect(total.getCell("A").value).toBe("Total");
+    expect(total.getCell("N").value).toBeNull();
   });
 
   it("still produces a valid file with no orders", async () => {

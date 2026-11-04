@@ -60,6 +60,13 @@ export function figuresFor(order: TallyOrder): VoucherFigures {
   return f;
 }
 
+/** "10 x Glucose biscuit 75 g (+1 free)", one line per item, so the register shows what was ordered at a glance. */
+export function itemsSummary(order: TallyOrder): string {
+  return order.lines
+    .map((l) => `${l.qtyCases} x ${l.itemName}${l.freeCases > 0 ? ` (+${l.freeCases} free)` : ""}`)
+    .join("\n");
+}
+
 function styleHeader(sheet: ExcelJS.Worksheet) {
   const row = sheet.getRow(1);
   row.height = 22;
@@ -107,6 +114,8 @@ export async function buildSalesWorkbook(orders: TallyOrder[], generatedAt: Date
     { header: "SGST", key: "sgst", width: 13, style: { numFmt: MONEY } },
     { header: "Total GST", key: "gst", width: 13, style: { numFmt: MONEY } },
     { header: "Invoice total", key: "total", width: 16, style: { numFmt: MONEY } },
+    // What was ordered, readable without opening the second sheet. One item per line.
+    { header: "Items ordered", key: "items", width: 54, style: { alignment: { wrapText: true, vertical: "top" } } },
     { header: "Note", key: "note", width: 36 },
   ];
 
@@ -129,6 +138,7 @@ export async function buildSalesWorkbook(orders: TallyOrder[], generatedAt: Date
       sgst: rs(f.sgst),
       gst: rs(f.gst),
       total: rs(f.total),
+      items: itemsSummary(o),
       note: o.note?.trim() ?? "",
     });
     sums.cases += f.cases;

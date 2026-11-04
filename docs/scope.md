@@ -23,14 +23,14 @@
 - A6. Credit check: outstanding + order total > credit limit puts the order ON_HOLD for the desk.
 - A7. Retailer-specific prices are a per-SKU override; otherwise the dealer price applies.
 - A8. Retailers, outstanding balances, credit limits and orders are invented seed data.
-- A9. OTP via SMS (Twilio Verify). Seeded demo numbers accept a fixed test code, enabled only by env var.
+- A9. OTP via SMS: the app makes and checks its own six-digit code (hashed, five minutes, single use) and sends it with Twilio's plain SMS API. Seeded demo numbers accept a fixed test code, enabled only by env var.
 - A11. Credit used = ledger outstanding + orders not yet exported to Tally (placed or confirmed). Orders already on hold are not counted. Over-limit orders are held for the desk, not rejected.
-- A12. Stock is reserved when the order is placed (paid + free cases) and is not returned automatically if the desk cancels.
+- A12. Stock is reserved when the order is placed (paid + free cases) and is put back if the desk cancels the order.
 - A13. When the desk exports an order to Tally, the shop's account balance goes up by the order total. Tally is the real ledger, so this mirrors what it will show after import, and keeps "credit used" correct once the order leaves the queue.
 - A14. The Tally file assumes intra-state sales (Jabalpur shops): GST is booked as half CGST and half SGST, per rate. Free goods are zero-value stock lines. Ledger names (Sales, Output CGST @6%, ...) and the stock unit "Case" are placeholders the client must confirm.
 - A15. The desk can release a credit hold on its own judgement. There is no second approver, but every release records who did it and when. Exported and cancelled orders are final.
 - A16. The desk screens are English only. The language switch is for shopkeepers.
-- A17. AI capture reads text only. Voice notes and photos of a handwritten list use the same pipeline (they would first be turned into text) but are not built. The AI never picks products: it only reads the message into lines, and the app's own matcher chooses and scores products.
+- A17. AI capture reads text only. Voice notes and photos of a handwritten list use the same pipeline (they would first be turned into text) but are not built. The AI reads the message into lines and may suggest up to two product codes as a hint; the app's own matcher makes the final choice and scores it.
 - A18. The shop is only ever shown cases. If a message says pieces, the quantity is converted to whole cases and rounded up, and the shopkeeper sees that. A missing quantity or unit is asked, never assumed.
 - A19. Matching uses only that shop's own past orders and learned phrases. What one shop teaches the app never affects another shop.
 - A20. A correction is remembered when the shopkeeper (or desk) changes a guess, or picks on a line the app was unsure about. A swap away from an out-of-stock product is treated as a substitution and is not remembered.
@@ -56,4 +56,8 @@
 - A41. Signing out on a shared phone deletes shop data and carts but keeps unsent orders, hidden from other users. Offline sign-out clears the data immediately and the cookie later.
 - A42. Only the desk creates accounts. There is no self sign-up for salesmen or shops, because an account gives access to prices and credit. The desk adds a person by name and mobile number, and they sign in with an SMS code. A mobile number can belong to one account only (shop or salesman), so the sign-in screen never has to guess.
 - A43. A salesman who leaves is switched off, not deleted. They are signed out on their next request, cannot sign in, and their shops become unassigned. History is kept. A new shop starts with the dealer prices; per-shop prices are not yet editable in the app.
+- A44. The desk manages the catalogue in the app. A product code is unique and cannot change once created. Products are never deleted, only taken off sale, because past orders refer to them. An off-sale product disappears from shops and salesmen and cannot be ordered, but past orders are untouched.
+- A45. Every stock change needs a reason and is recorded with the desk user's name. Adding and removing are single atomic updates, so an order arriving at the same moment is never lost. "Set to a count" is refused if the stock moved since the desk looked (an order came in), instead of overwriting it. Stock cannot go below zero.
+- A46. The desk writes a scheme as numbers (buy and free cases, or minimum cases and percentage) and the English wording is generated from them, so the words can never disagree with the rule. A scheme can start and end on chosen days (whole Indian days). The same rule cannot be added twice while switched on. Removing a scheme does not change past orders, which keep the scheme name they were priced with.
+- A47. A new price or scheme applies to the next order that is placed. A cart already open on a phone is priced again by the server when the order is placed, and a salesman's phone picks up changes at its next sync. GST rates are chosen from 0, 5, 12, 18 and 28 percent.
 - A10. Tally export is a Tally Prime sales-voucher XML; the client's real ledger and item names are unknown.

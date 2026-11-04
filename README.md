@@ -72,6 +72,7 @@ RetailDesk lets shops see the truth up front (stock, price, scheme, credit) and 
 - **AI orders** are marked, and show the shop's original message plus the words they wrote for each line with a confidence label. The desk can **change a line's product**: the order is priced again, and the app remembers the fix for that shop.
 - **Decisions:** confirm an order, release a credit hold (your name is recorded), or cancel with a required reason. Cancelling puts the stock back.
 - **Excel export:** pick confirmed orders and download an **Excel sales register** (`.xlsx`): one row per order (with the items ordered listed on the row), a full line-items sheet behind it, and a GST summary by rate, with live totals. A Tally XML import file is still available as a secondary option. Re-download an old file any time without changing anything.
+- **Catalogue tab:** manage the whole catalogue without touching the database. **Add products** (code, English and Hindi name, brand, pieces per case, dealer price, GST rate, opening stock). **Edit price and GST**, or take a product **off sale**. **Adjust stock**: add a delivery, remove damaged cases, or set a counted figure, each with a required reason. **Manage schemes**: percentage off, or free cases, with optional start and end dates. A product can have several and the best applies (see [the scheme engine](#how-it-works)). **Give a shop its own price.** Every change is written to a **history** with who made it, and low and out-of-stock products are flagged at the top.
 - **Salesmen tab:** the roster of 18 salesmen with their shops, orders and value over 30 days, and a dropdown beside every shop to assign it. Shops with no salesman are listed first.
 - **Add a salesman** (name and mobile number): they can sign in at once with an SMS code. **Switch a salesman off** when they leave: they are signed out immediately, cannot sign in, and their shops go back to unassigned. Nothing is deleted, so the orders they took keep their name.
 - **Add a shop** (name, owner, mobile, area, credit limit, amount owed, optional salesman): the owner can sign in at once. One mobile number can belong to one account only, whether a shop or a salesman.
@@ -97,6 +98,7 @@ RetailDesk lets shops see the truth up front (stock, price, scheme, credit) and 
 | Installable web app (home screen icon, offline page) | Done |
 | Salesman mode: my shops, ordering on a shop's behalf, who took each order | Done, with tests |
 | Salesman offline ordering: saved shops, queued orders, sync, change report, shared-phone safety | Done, with tests |
+| Catalogue admin: products, prices, GST, stock, schemes, shop prices, change history | Done, with tests |
 | Voice notes, photo of a list | Not in the core build |
 
 ## Tech stack

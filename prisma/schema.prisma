@@ -92,6 +92,20 @@ model Sku {
   retailerPrice RetailerPrice[]
   orderLines    OrderLine[]
   aliases       Alias[]
+  events        CatalogueEvent[]
+}
+
+// Who changed a product, its price, its stock or its schemes, and what they changed. Never edited.
+model CatalogueEvent {
+  id        String   @id @default(cuid())
+  skuId     String
+  kind      String // PRODUCT_CREATED | PRODUCT_UPDATED | STOCK_ADJUSTED | SCHEME_ADDED | SCHEME_CHANGED | SCHEME_REMOVED | SHOP_PRICE_SET | SHOP_PRICE_REMOVED
+  summary   String // plain words, e.g. "Dealer price Rs 8.10 -> Rs 8.25"
+  byName    String
+  createdAt DateTime @default(now())
+  sku       Sku      @relation(fields: [skuId], references: [id], onDelete: Cascade)
+
+  @@index([skuId, createdAt])
 }
 
 // Per-retailer override of the dealer price (per piece, GST-exclusive).

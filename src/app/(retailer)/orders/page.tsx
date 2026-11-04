@@ -6,6 +6,7 @@ import { requireRetailer } from "@/lib/auth/dal";
 import { db } from "@/lib/db";
 import { fmt, plural } from "@/lib/i18n/dict";
 import { getDict } from "@/lib/i18n/server";
+import { formatDate } from "@/lib/format";
 import { formatPaise } from "@/lib/money";
 
 export default async function OrdersPage() {
@@ -18,12 +19,6 @@ export default async function OrdersPage() {
     orderBy: { createdAt: "desc" },
     take: 30,
     include: { lines: { select: { skuId: true, qtyCases: true } } },
-  });
-
-  const date = new Intl.DateTimeFormat(lang === "hi" ? "hi-IN" : "en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
   });
 
   return (
@@ -50,7 +45,7 @@ export default async function OrdersPage() {
                   <div>
                     <p className="font-medium">{fmt(t.orders.number, { n: o.number })}</p>
                     <p className="text-sm text-muted">
-                      {date.format(o.createdAt)} · {fmt(plural(o.lines.length, t.orders.itemsOne, t.orders.items), { n: o.lines.length })}
+                      {formatDate(o.createdAt, lang)} · {fmt(plural(o.lines.length, t.orders.itemsOne, t.orders.items), { n: o.lines.length })}
                     </p>
                   </div>
                   <OrderStatus status={o.status} t={t.orders.status} />

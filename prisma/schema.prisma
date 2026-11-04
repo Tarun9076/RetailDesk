@@ -130,11 +130,25 @@ model Order {
   confirmedAt   DateTime?
   exportedAt    DateTime?
 
-  retailer Retailer    @relation(fields: [retailerId], references: [id])
+  retailer Retailer     @relation(fields: [retailerId], references: [id])
   lines    OrderLine[]
+  events   OrderEvent[]
 
   @@index([status, createdAt])
   @@index([retailerId, createdAt])
+}
+
+// Who did what to an order, and when. Never edited after it is written.
+model OrderEvent {
+  id        String   @id @default(cuid())
+  orderId   String
+  action    String // CONFIRM | RELEASE | CANCEL | EXPORT
+  byName    String
+  note      String?
+  createdAt DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
 }
 
 model OrderLine {

@@ -6,6 +6,7 @@ import { requireRetailer } from "@/lib/auth/dal";
 import { db } from "@/lib/db";
 import { fmt, plural } from "@/lib/i18n/dict";
 import { getDict } from "@/lib/i18n/server";
+import { formatDateTimeLong } from "@/lib/format";
 import { formatPaise } from "@/lib/money";
 
 export default async function OrderDetailPage(props: PageProps<"/orders/[id]">) {
@@ -50,7 +51,7 @@ export default async function OrderDetailPage(props: PageProps<"/orders/[id]">) 
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{fmt(t.orders.number, { n: order.number })}</h1>
           <p className="text-sm text-muted">
-            {new Intl.DateTimeFormat(lang === "hi" ? "hi-IN" : "en-IN", { dateStyle: "medium", timeStyle: "short" }).format(order.createdAt)}
+            {formatDateTimeLong(order.createdAt, lang)}
           </p>
         </div>
         <OrderStatus status={order.status} t={t.orders.status} />

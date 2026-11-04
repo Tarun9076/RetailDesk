@@ -7,6 +7,7 @@ import "dotenv/config";
 import argon2 from "argon2";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, type Sku } from "../src/generated/prisma/client";
+import { aliasKey } from "../src/lib/capture/match";
 import { priceOrder } from "../src/lib/pricing/engine";
 import type { SchemeRule } from "../src/lib/pricing/types";
 
@@ -149,7 +150,11 @@ async function main() {
     const inStock = skuRows.filter((x) => x.seed.stockCases > 0);
     for (let i = 0; i < r.orders; i++) {
       const daysAgo = i === 0 ? r.lastOrderDaysAgo : r.lastOrderDaysAgo + Math.round((i * 40) / r.orders) + randInt(0, 3);
-      const createdAt = new Date(Date.now() - daysAgo * DAY);
+      // Orders still waiting for the desk are from the last day or so, like a real queue.
+      const isOpen = i < (OPEN_ORDERS[r.phone] ?? 0);
+      const createdAt = isOpen
+        ? new Date(Date.now() - (2 + i * 6) * 3_600_000)
+        : new Date(Date.now() - daysAgo * DAY);
       const picks = [...inStock].sort(() => rand() - 0.5).slice(0, randInt(2, 4));
       const priced = priceOrder(
         picks.map(({ row, seed }) => ({
@@ -164,7 +169,7 @@ async function main() {
       );
       // Only a few recent orders are still waiting for the desk; the rest are billed.
       // Open orders count towards credit used, so this keeps the demo balances sensible.
-      const status = i < (OPEN_ORDERS[r.phone] ?? 0) ? "PLACED" : "EXPORTED";
+      const status = isOpen ? "PLACED" : "EXPORTED";
       await db.order.create({
         data: {
           number: `RD-${String(orderNo++).padStart(6, "0")}`,
@@ -211,7 +216,12 @@ async function main() {
   // One learned alias, so the AI flow shows the retailer-specific shortcut
   const gupta = await db.retailer.findUniqueOrThrow({ where: { phone: "+919000000001" } });
   await db.alias.create({
-    data: { retailerId: gupta.id, phrase: "chhota biscuit", skuId: byCode.get("SKU-BS-075")!.row.id },
+    data: {
+      retailerId: gupta.id,
+      // same key the matcher builds for "chhota biscuit" / "biscuit chhota"
+      phrase: aliasKey({ item: "biscuit", size: null, sizeWord: "small" }),
+      skuId: byCode.get("SKU-BS-075")!.row.id,
+    },
   });
 
   console.log(`Seeded ${SKUS.length} SKUs, ${RETAILERS.length} retailers, ${orderNo - 1} orders.`);

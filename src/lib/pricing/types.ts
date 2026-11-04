@@ -27,7 +27,11 @@ export interface PricingLineInput {
   piecesPerCase: number;
   gstRateBp: number; // 1200 = 12%
   stockCases: number;
-  scheme?: SchemeRule | null;
+  /**
+   * Every scheme on this product, or one, or none. The engine applies the single
+   * best one for the quantity ordered; schemes never stack.
+   */
+  scheme?: SchemeRule | SchemeRule[] | null;
 }
 
 export type LineIssue =
@@ -49,6 +53,7 @@ export interface PricedLine {
   gstPaise: number;
   totalPaise: number; // taxable + gst
   schemeLabel: string | null; // scheme that actually applied
+  appliedScheme: SchemeRule | null; // the same scheme as a rule, so the UI can word it in either language
   hint: string | null; // English text for the next benefit (logs, tests)
   nextBenefit: NextBenefit | null; // same thing as data, for translated UI
   issue: LineIssue | null;

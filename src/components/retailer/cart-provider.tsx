@@ -56,7 +56,7 @@ export function CartProvider({
     (skuId: string, n: number) => {
       const item = byId.get(skuId);
       if (!item || !Number.isFinite(n)) return 0;
-      return Math.max(0, Math.min(Math.floor(n), maxOrderableCases(item.stockCases, item.scheme)));
+      return Math.max(0, Math.min(Math.floor(n), maxOrderableCases(item.stockCases, item.schemes)));
     },
     [byId],
   );
@@ -162,7 +162,7 @@ export function CartProvider({
             piecesPerCase: i.piecesPerCase,
             gstRateBp: i.gstRateBp,
             stockCases: i.stockCases,
-            scheme: i.scheme,
+            scheme: i.schemes,
           })),
       ),
     [items, qty],

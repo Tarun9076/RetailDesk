@@ -17,7 +17,8 @@
 - A1. Dealer price in the sample data is per piece; case price = price x pieces per case (biscuit 96, detergent 20, tea 40).
 - A2. Sample prices are GST-exclusive; GST is added at 12% (biscuit, tea) and 18% (detergent). Rates are invented.
 - A3. Orders are in whole cases only; free goods are whole cases.
-- A4. One active scheme per SKU. Free goods: floor(qty / buyQty) x freeQty. A slab applies to the whole line once qty >= minQty.
+- A4. A product can carry several schemes (for example 3% at 5+ cases and 5% at 20+ cases, or a free-goods rule beside a slab). Only one applies to a line, the one worth most to the shop at that quantity; schemes never stack. Free goods and a percentage are compared in the same units (a free case is worth a case price), so no price is needed. On an exact tie a percentage wins, then the lower threshold, then the label, so the same rows always give the same answer. Free goods: floor(qty / buyQty) x freeQty, repeating for every full block. A slab applies to the whole line once qty >= minQty. The "add N more cases" hint only suggests a threshold that would really win at that quantity.
+- A35. A scheme's "valid from" and "valid until" are whole Indian days: it starts at 00:00 IST on its first day and runs to the end of its last day.
 - A5. Free cases must be in stock too; an order cannot exceed available stock.
 - A6. Credit check: outstanding + order total > credit limit puts the order ON_HOLD for the desk.
 - A7. Retailer-specific prices are a per-SKU override; otherwise the dealer price applies.

@@ -97,7 +97,7 @@ export function CartView({
           {priced.lines.map((line) => {
             const item = byId.get(line.skuId)!;
             const name = lang === "hi" && item.nameHi ? item.nameHi : item.name;
-            const max = maxOrderableCases(item.stockCases, item.scheme);
+            const max = maxOrderableCases(item.stockCases, item.schemes);
             return (
               <li key={line.skuId} className="p-4">
                 <div className="flex items-start justify-between gap-3">
@@ -126,14 +126,14 @@ export function CartView({
                 </div>
 
                 <div className="mt-2 space-y-1 text-sm">
-                  {line.freeCases > 0 && item.scheme && (
+                  {line.freeCases > 0 && line.appliedScheme && (
                     <p className="font-medium text-accent">
-                      {fmt(t.free, { n: line.freeCases })} · {schemeText(item.scheme, lang)}
+                      {fmt(t.free, { n: line.freeCases })} · {schemeText(line.appliedScheme, lang)}
                     </p>
                   )}
-                  {line.discountPaise > 0 && item.scheme && (
+                  {line.discountPaise > 0 && line.appliedScheme && (
                     <p className="font-medium text-accent">
-                      −{formatPaise(line.discountPaise)} · {schemeText(item.scheme, lang)}
+                      −{formatPaise(line.discountPaise)} · {schemeText(line.appliedScheme, lang)}
                     </p>
                   )}
                   {line.nextBenefit && (

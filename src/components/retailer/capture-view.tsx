@@ -100,7 +100,7 @@ export function CaptureView({ t }: { t: Dict["capture"] }) {
   function status(l: LineState) {
     const item = l.skuId ? byId.get(l.skuId) : undefined;
     const out = !!item && item.stockCases === 0;
-    const max = item ? maxOrderableCases(item.stockCases, item.scheme) : 0;
+    const max = item ? maxOrderableCases(item.stockCases, item.schemes) : 0;
     let cases: number | null = null;
     if (l.qty && l.qty > 0) {
       if (l.unit === "case") cases = l.qty;

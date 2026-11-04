@@ -20,14 +20,15 @@ const int = (min: number, max: number) => min + Math.floor(rand() * (max - min +
 function reference(i: PricingLineInput) {
   const qty = BigInt(i.qtyCases);
   const gross = qty * BigInt(i.piecesPerCase) * BigInt(i.unitPricePaise);
-  const roundDiv = (num: bigint, den: bigint) => (2n * num + den) / (2n * den); // half up
-  let discount = 0n;
-  let free = 0n;
-  const s = i.scheme;
-  if (s?.type === "SLAB_PERCENT" && i.qtyCases >= s.minQty) discount = roundDiv(gross * BigInt(s.percentBp), 10000n);
+  const [ZERO, TWO, BPS] = [BigInt(0), BigInt(2), BigInt(10000)];
+  const roundDiv = (num: bigint, den: bigint) => (TWO * num + den) / (TWO * den); // half up
+  let discount = ZERO;
+  let free = ZERO;
+  const s = Array.isArray(i.scheme) ? null : i.scheme; // this test uses one scheme per line
+  if (s?.type === "SLAB_PERCENT" && i.qtyCases >= s.minQty) discount = roundDiv(gross * BigInt(s.percentBp), BPS);
   if (s?.type === "FREE_GOODS") free = (qty / BigInt(s.buyQty)) * BigInt(s.freeQty);
   const taxable = gross - discount;
-  const gst = roundDiv(taxable * BigInt(i.gstRateBp), 10000n);
+  const gst = roundDiv(taxable * BigInt(i.gstRateBp), BPS);
   return { gross, discount, free, taxable, gst, total: taxable + gst };
 }
 

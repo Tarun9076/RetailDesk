@@ -16,7 +16,7 @@ export function ProductCard({ item, t }: { item: CatalogueItem; t: Dict["catalog
   const line = lineFor(item.id);
   const out = item.stockCases === 0;
   const low = !out && item.stockCases <= LOW_STOCK_CASES;
-  const max = maxOrderableCases(item.stockCases, item.scheme);
+  const max = maxOrderableCases(item.stockCases, item.schemes);
   const name = lang === "hi" && item.nameHi ? item.nameHi : item.name;
 
   return (
@@ -37,11 +37,11 @@ export function ProductCard({ item, t }: { item: CatalogueItem; t: Dict["catalog
       </p>
 
       <div className="mt-2 flex flex-wrap gap-1.5">
-        {item.scheme && (
-          <span className="rounded-full bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">
-            {schemeText(item.scheme, lang)}
+        {item.schemes.map((s) => (
+          <span key={schemeText(s, "en")} className="rounded-full bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent">
+            {schemeText(s, lang)}
           </span>
-        )}
+        ))}
         <span
           className={`rounded-full px-2.5 py-1 text-xs font-medium ${
             out ? "bg-danger-soft text-danger" : low ? "bg-amber-50 text-amber-800" : "bg-surface text-muted"

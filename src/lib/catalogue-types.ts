@@ -15,5 +15,5 @@ export interface CatalogueItem {
   casePricePaise: number;
   gstRateBp: number;
   stockCases: number;
-  scheme: SchemeRule | null; // only a currently live scheme, without dates
+  schemes: SchemeRule[]; // currently live schemes only, without dates; the engine applies the best one
 }

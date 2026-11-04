@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
-import { isSchemeLive } from "@/lib/pricing/engine";
+import { compareSchemes, isSchemeLive } from "@/lib/pricing/engine";
 import type { SchemeRule } from "@/lib/pricing/types";
 import type { CatalogueItem } from "@/lib/catalogue-types";
 
@@ -24,7 +24,12 @@ export async function loadCatalogue(
   const override = new Map(overrides.map((o) => [o.skuId, o.pricePaise]));
 
   return skus.map((s) => {
-    const live = s.schemes.map(toRule).find((r) => isSchemeLive(r, now)) ?? null;
+    // Every live scheme, in a fixed order. The engine picks the best one per quantity.
+    const schemes = s.schemes
+      .map(toRule)
+      .filter((r): r is SchemeRule => r !== null && isSchemeLive(r, now))
+      .sort(compareSchemes)
+      .map((r) => ({ ...r, validFrom: null, validUntil: null }));
     const unitPricePaise = override.get(s.id) ?? s.pricePaise;
     return {
       id: s.id,
@@ -37,7 +42,7 @@ export async function loadCatalogue(
       casePricePaise: unitPricePaise * s.piecesPerCase,
       gstRateBp: s.gstRateBp,
       stockCases: s.stockCases,
-      scheme: live && { ...live, validFrom: null, validUntil: null },
+      schemes,
     };
   });
 }

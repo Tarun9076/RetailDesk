@@ -48,7 +48,7 @@ export function buildOrder(
       piecesPerCase: item.piecesPerCase,
       gstRateBp: item.gstRateBp,
       stockCases: item.stockCases,
-      scheme: item.scheme,
+      scheme: item.schemes,
     })),
     now,
   );

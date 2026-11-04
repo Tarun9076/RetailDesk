@@ -13,7 +13,10 @@ export default async function LoginPage() {
   return (
     <AuthShell>
       <OtpLoginForm t={t.login} />
-      <p className="mt-10 text-center text-sm">
+      <p className="mt-10 flex flex-col items-center text-center text-sm">
+        <Link href="/sales/login" className="inline-block min-h-11 py-3 text-muted underline-offset-4 hover:underline">
+          {t.login.salesman}
+        </Link>
         <Link href="/desk/login" className="inline-block min-h-11 py-3 text-muted underline-offset-4 hover:underline">
           {t.login.staff}
         </Link>

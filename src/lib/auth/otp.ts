@@ -71,8 +71,8 @@ async function findOtpAccount(phone: string) {
   const user = await db.user.findFirst({
     where: {
       OR: [
-        { role: "RETAILER", retailer: { phone } },
-        { role: "SALESMAN", phone },
+        { role: "RETAILER", active: true, retailer: { phone } },
+        { role: "SALESMAN", active: true, phone },
       ],
     },
     select: { id: true, role: true, retailerId: true },

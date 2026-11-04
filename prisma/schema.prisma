@@ -66,6 +66,7 @@ model User {
   email        String?   @unique // desk login
   passwordHash String?
   phone        String?   @unique // salesman login (E.164); retailers log in with Retailer.phone
+  active       Boolean   @default(true) // false = left the company: cannot sign in, existing sessions stop working
   retailerId   String?
   retailer     Retailer? @relation("RetailerLogins", fields: [retailerId], references: [id])
   createdAt    DateTime  @default(now())

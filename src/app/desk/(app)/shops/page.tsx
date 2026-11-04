@@ -41,7 +41,7 @@ const waLink = (row: ShopRow) =>
 
 export default async function ShopsPage(props: PageProps<"/desk/shops">) {
   await requireDesk();
-  const { show } = await props.searchParams;
+  const { show, added } = await props.searchParams;
   const filter = FILTERS.find((f) => f.key === show) ?? FILTERS[0];
 
   const now = new Date();
@@ -58,7 +58,17 @@ export default async function ShopsPage(props: PageProps<"/desk/shops">) {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold tracking-tight">Shops</h1>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <h1 className="text-2xl font-semibold tracking-tight">Shops</h1>
+        <Link href="/desk/shops/new" className="flex min-h-11 items-center rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-accent-strong">
+          Add a shop
+        </Link>
+      </div>
+      {added === "1" && (
+        <p role="status" className="mt-4 rounded-xl bg-accent-soft px-4 py-3 text-sm text-accent-strong">
+          Shop added. The owner can sign in with an SMS code on that number.
+        </p>
+      )}
       <p className="mt-1 text-muted">
         Who has gone quiet. A shop counts as quiet after {QUIET_AFTER_DAYS} days without an order. Cancelled orders do
         not count.

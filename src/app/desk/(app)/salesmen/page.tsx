@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { AddSalesman } from "@/components/desk/add-salesman";
 import { AssignSalesman } from "@/components/desk/assign-salesman";
+import { SalesmanStatus } from "@/components/desk/salesman-status";
 import { requireDesk } from "@/lib/auth/dal";
 import { db } from "@/lib/db";
 import { formatPaise } from "@/lib/money";
@@ -12,7 +14,11 @@ export default async function SalesmenPage(props: PageProps<"/desk/salesmen">) {
   const since = new Date(now.getTime() - 30 * 86_400_000);
 
   const [salesmen, shopCounts, orders, shops] = await Promise.all([
-    db.user.findMany({ where: { role: "SALESMAN" }, select: { id: true, name: true, phone: true }, orderBy: { name: "asc" } }),
+    db.user.findMany({
+      where: { role: "SALESMAN" },
+      select: { id: true, name: true, phone: true, active: true },
+      orderBy: [{ active: "desc" }, { name: "asc" }],
+    }),
     db.retailer.groupBy({ by: ["salesmanId"], _count: { _all: true } }),
     db.order.groupBy({
       by: ["placedById"],
@@ -31,7 +37,8 @@ export default async function SalesmenPage(props: PageProps<"/desk/salesmen">) {
   const countBy = new Map(shopCounts.map((r) => [r.salesmanId, r._count._all]));
   const ordersBy = new Map(orders.map((r) => [r.placedById, r]));
   const unassigned = countBy.get(null) ?? 0;
-  const options = salesmen.map((s) => ({ id: s.id, name: s.name }));
+  // Only people who still work here can be given shops.
+  const options = salesmen.filter((s) => s.active).map((s) => ({ id: s.id, name: s.name }));
 
   const tab = (active: boolean) =>
     `flex min-h-11 shrink-0 items-center rounded-full border px-4 text-sm font-medium ${
@@ -40,18 +47,27 @@ export default async function SalesmenPage(props: PageProps<"/desk/salesmen">) {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold tracking-tight">Salesmen</h1>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <h1 className="text-2xl font-semibold tracking-tight">Salesmen</h1>
+        <Link href="/desk/shops/new" className="flex min-h-11 items-center rounded-xl border border-line px-4 text-sm font-medium hover:bg-surface">
+          Add a shop
+        </Link>
+      </div>
       <p className="mt-1 max-w-3xl text-sm text-muted">
         Each salesman sees only the shops assigned to them, with those shops&apos; own prices and credit, and can take
         orders on their behalf, even with no signal. Orders they take are marked with their name.
       </p>
+
+      <div className="mt-6">
+        <AddSalesman />
+      </div>
 
       <section aria-labelledby="roster" className="mt-6 rounded-2xl border border-line">
         <h2 id="roster" className="sr-only">
           Roster
         </h2>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[34rem] text-left text-sm">
+          <table className="w-full min-w-[44rem] text-left text-sm">
             <thead className="border-b border-line text-muted">
               <tr>
                 <th className="px-4 py-3 font-medium">Salesman</th>
@@ -59,6 +75,7 @@ export default async function SalesmenPage(props: PageProps<"/desk/salesmen">) {
                 <th className="px-4 py-3 text-right font-medium">Shops</th>
                 <th className="px-4 py-3 text-right font-medium">Orders, 30 days</th>
                 <th className="px-4 py-3 text-right font-medium">Value, 30 days</th>
+                <th className="px-4 py-3 text-right font-medium">Access</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
@@ -71,6 +88,9 @@ export default async function SalesmenPage(props: PageProps<"/desk/salesmen">) {
                     <td className="px-4 py-3 text-right tabular-nums">{countBy.get(s.id) ?? 0}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{o?._count._all ?? 0}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{formatPaise(o?._sum.totalPaise ?? 0)}</td>
+                    <td className="px-4 py-3">
+                      <SalesmanStatus id={s.id} name={s.name} active={s.active} shops={countBy.get(s.id) ?? 0} />
+                    </td>
                   </tr>
                 );
               })}

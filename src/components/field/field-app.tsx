@@ -116,7 +116,7 @@ export function FieldApp({
           const ok = await fetch("/api/auth/logout", { method: "POST" }).then((r) => r.ok).catch(() => false);
           if (ok) {
             await setPendingLogout(false);
-            window.location.replace("/login");
+            window.location.replace("/sales/login");
           } else if (alive) setPhase("signed_out");
           return;
         }
@@ -136,7 +136,7 @@ export function FieldApp({
           setSnapshot(res.snapshot);
           setOnline(true);
         } else if (res.reason === "signed_out") {
-          window.location.replace("/login");
+          window.location.replace("/sales/login");
           return;
         } else {
           setOnline(false);
@@ -215,7 +215,7 @@ export function FieldApp({
       setPhase("signed_out");
       return;
     }
-    window.location.replace("/login");
+    window.location.replace("/sales/login");
   }
 
   if (phase === "loading") {

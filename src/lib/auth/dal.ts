@@ -15,7 +15,8 @@ export const getCurrentUser = cache(async () => {
     where: { id: session.sub },
     include: { retailer: true },
   });
-  if (!user || user.role !== session.role) return null;
+  // A switched-off account (a salesman who left) loses access at once, even with a valid cookie.
+  if (!user || !user.active || user.role !== session.role) return null;
   return user;
 });
 
@@ -27,7 +28,7 @@ export async function requireRetailer() {
 
 export async function requireSalesman() {
   const user = await getCurrentUser();
-  if (!user || user.role !== "SALESMAN") redirect("/login");
+  if (!user || user.role !== "SALESMAN") redirect("/sales/login");
   return user;
 }
 

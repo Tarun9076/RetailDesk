@@ -73,6 +73,8 @@ RetailDesk lets shops see the truth up front (stock, price, scheme, credit) and 
 - **Decisions:** confirm an order, release a credit hold (your name is recorded), or cancel with a required reason. Cancelling puts the stock back.
 - **Excel export:** pick confirmed orders and download an **Excel sales register** (`.xlsx`): one row per order, the line items behind it, and a GST summary by rate, with live totals. A Tally XML import file is still available as a secondary option. Re-download an old file any time without changing anything.
 - **Salesmen tab:** the roster of 18 salesmen with their shops, orders and value over 30 days, and a dropdown beside every shop to assign it. Shops with no salesman are listed first.
+- **Add a salesman** (name and mobile number): they can sign in at once with an SMS code. **Switch a salesman off** when they leave: they are signed out immediately, cannot sign in, and their shops go back to unassigned. Nothing is deleted, so the orders they took keep their name.
+- **Add a shop** (name, owner, mobile, area, credit limit, amount owed, optional salesman): the owner can sign in at once. One mobile number can belong to one account only, whether a shop or a salesman.
 - **Van loading list:** what to pick from the godown, and what drops at each shop. Printable.
 - **Shops dashboard:** which shops have gone quiet (no order in 14+ days, or 30+), with last order date, 90-day orders, credit left, and one-tap **Call** and **WhatsApp** buttons. Shops that never ordered are listed too.
 
@@ -191,9 +193,9 @@ Those seven numbers (`9000000001` to `9000000007`) are fake, so no SMS can reach
 
 **Salesman** (opens My shops)
 
-1. Go to `/login` (the same screen as retailers).
+1. Go to `/sales/login` (or tap **Salesman? Sign in here** on the shop sign-in screen).
 2. Enter a salesman number, `9100000001` to `9100000018`, and the same `OTP_TEST_CODE`.
-3. Add those eighteen numbers to `OTP_TEST_NUMBERS` too (see below).
+3. Add those eighteen numbers to `OTP_TEST_NUMBERS` too (see below). A salesman or shop you add yourself gets a real SMS (with `SMS_PROVIDER=console` the code is printed in the server log).
 
 | Number | Salesman | Shops |
 | --- | --- | --- |

@@ -17,6 +17,10 @@ const en = {
     resendIn: "Send a new code in {s}s",
     changeNumber: "Use a different number",
     staff: "Order desk staff? Sign in here",
+    salesman: "Salesman? Sign in here",
+    salesmanTitle: "Salesman sign in",
+    salesmanSubtitle: "Enter your mobile number to get a code. The office adds you first.",
+    shopLink: "Shop owner? Sign in here",
     errors: {
       invalidPhone: "Enter a valid 10-digit mobile number.",
       invalidCode: "That code is wrong or has expired. Check it or ask for a new one.",
@@ -201,6 +205,10 @@ const hi: Dict = {
     resendIn: "{s} सेकंड में नया कोड भेजें",
     changeNumber: "दूसरा नंबर डालें",
     staff: "ऑर्डर डेस्क स्टाफ? यहाँ साइन इन करें",
+    salesman: "सेल्समैन? यहाँ साइन इन करें",
+    salesmanTitle: "सेल्समैन साइन इन",
+    salesmanSubtitle: "कोड पाने के लिए अपना मोबाइल नंबर डालें। पहले ऑफ़िस आपको जोड़ता है।",
+    shopLink: "दुकानदार? यहाँ साइन इन करें",
     errors: {
       invalidPhone: "10 अंकों का सही मोबाइल नंबर डालें।",
       invalidCode: "कोड गलत है या समय समाप्त हो गया है। जाँचें या नया कोड मँगाएँ।",

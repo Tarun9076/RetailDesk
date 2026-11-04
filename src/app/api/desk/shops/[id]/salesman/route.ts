@@ -16,7 +16,7 @@ export async function PATCH(req: Request, ctx: RouteContext<"/api/desk/shops/[id
   const { id } = await ctx.params;
   const { salesmanId } = parsed.data;
   if (salesmanId) {
-    const salesman = await db.user.findFirst({ where: { id: salesmanId, role: "SALESMAN" }, select: { id: true } });
+    const salesman = await db.user.findFirst({ where: { id: salesmanId, role: "SALESMAN", active: true }, select: { id: true } });
     if (!salesman) return json({ error: "unknown_salesman" }, 422);
   }
   const res = await db.retailer.updateMany({ where: { id }, data: { salesmanId } });

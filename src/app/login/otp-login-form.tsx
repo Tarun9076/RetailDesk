@@ -21,7 +21,16 @@ async function post(url: string, body: unknown) {
   }
 }
 
-export function OtpLoginForm({ t }: { t: Dict["login"] }) {
+export function OtpLoginForm({
+  t,
+  title,
+  subtitle,
+}: {
+  t: Dict["login"];
+  /** Overrides for the salesman's screen, which uses the same code flow. */
+  title?: string;
+  subtitle?: string;
+}) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("phone");
   const [phone, setPhone] = useState("");
@@ -97,11 +106,11 @@ export function OtpLoginForm({ t }: { t: Dict["login"] }) {
 
   return (
     <div>
-      <h1 className="text-3xl font-semibold tracking-tight">{t.title}</h1>
+      <h1 className="text-3xl font-semibold tracking-tight">{title ?? t.title}</h1>
 
       {step === "phone" ? (
         <form onSubmit={requestCode} className="mt-6 space-y-4" noValidate>
-          <p className="text-muted">{t.subtitle}</p>
+          <p className="text-muted">{subtitle ?? t.subtitle}</p>
           <div>
             <label htmlFor="phone" className="mb-1.5 block text-sm font-medium text-muted">
               {t.phoneLabel}

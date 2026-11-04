@@ -13,18 +13,22 @@ export async function loadCatalogue(
   retailerId: string,
   now: Date = new Date(),
 ): Promise<CatalogueItem[]> {
-  const [skus, overrides] = await Promise.all([
+  // Three independent reads sent together: one wait instead of two in a row
+  // (a Prisma "include" fetches the schemes in a second step, after the products).
+  const [skus, schemeRows, overrides] = await Promise.all([
     db.sku.findMany({
       where: { active: true },
-      include: { schemes: { where: { active: true } } },
       orderBy: [{ brand: "asc" }, { name: "asc" }],
     }),
+    db.scheme.findMany({ where: { active: true } }),
     db.retailerPrice.findMany({ where: { retailerId } }),
   ]);
   const override = new Map(overrides.map((o) => [o.skuId, o.pricePaise]));
+  const schemesBySku = new Map<string, typeof schemeRows>();
+  for (const r of schemeRows) schemesBySku.set(r.skuId, [...(schemesBySku.get(r.skuId) ?? []), r]);
 
   return skus.map((s) => {
-    const schemes = liveSchemes(s.schemes, now);
+    const schemes = liveSchemes(schemesBySku.get(s.id) ?? [], now);
     const unitPricePaise = override.get(s.id) ?? s.pricePaise;
     return {
       id: s.id,

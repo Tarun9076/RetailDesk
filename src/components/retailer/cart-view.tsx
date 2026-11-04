@@ -20,7 +20,7 @@ export function CartView({
   availableCreditPaise: number;
 }) {
   const router = useRouter();
-  const { items, lang, qty, priced, setQty, clear, hydrated } = useCart();
+  const { items, lang, qty, priced, setQty, clear, hydrated, captureId } = useCart();
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,6 +62,7 @@ export function CartView({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           idempotencyKey,
+          captureId: captureId ?? undefined,
           note: note.trim() || undefined,
           lines: priced.lines.map((l) => ({ skuId: l.skuId, qtyCases: l.qtyCases })),
         }),

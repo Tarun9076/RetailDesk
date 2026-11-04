@@ -2,6 +2,7 @@ import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
 import { loadCatalogue } from "@/lib/catalogue";
+import { captureForOrder } from "@/lib/capture/service";
 import { buildOrder, type RequestedLine } from "./build";
 import { checkCredit } from "./credit";
 import { getCreditPosition } from "./exposure";
@@ -26,8 +27,8 @@ export async function placeOrder(input: {
   lines: RequestedLine[];
   note?: string;
   idempotencyKey: string;
-  source?: "CATALOGUE" | "AI_TEXT";
-  rawMessage?: string;
+  /** Set when the cart came from a reviewed AI capture. */
+  captureId?: string;
 }): Promise<PlaceResult> {
   // Scoped per retailer, so one shop's key can never collide with or reveal another's.
   const key = `${input.retailerId}:${input.idempotencyKey}`;
@@ -39,6 +40,8 @@ export async function placeOrder(input: {
   if (!built.ok) return built;
 
   const { priced } = built;
+  // Only a capture that belongs to this shop, was reviewed, and is unused counts.
+  const capture = input.captureId ? await captureForOrder(input.retailerId, input.captureId) : null;
   const position = await getCreditPosition(input.retailerId);
   const credit = checkCredit(position.limitPaise, position.usedPaise, priced.totalPaise);
   const status = credit.hold ? "ON_HOLD" : "PLACED";
@@ -57,16 +60,16 @@ export async function placeOrder(input: {
           if (res.count !== 1) throw new StockRace(l.skuId);
         }
         const number = `RD-${String((await tx.order.count()) + 1).padStart(6, "0")}`;
-        return tx.order.create({
+        const created = await tx.order.create({
           data: {
             number,
             idempotencyKey: key,
             retailerId: input.retailerId,
             status,
-            source: input.source ?? "CATALOGUE",
+            source: capture ? "AI_TEXT" : "CATALOGUE",
             holdReason: credit.reason,
             note: input.note?.trim() || null,
-            rawMessage: input.rawMessage ?? null,
+            rawMessage: capture?.rawText ?? null,
             subtotalPaise: priced.subtotalPaise,
             discountPaise: priced.discountPaise,
             gstPaise: priced.gstPaise,
@@ -81,10 +84,20 @@ export async function placeOrder(input: {
                 discountPaise: l.discountPaise,
                 gstPaise: l.gstPaise,
                 schemeLabel: l.schemeLabel,
+                originalText: capture?.bySku.get(l.skuId)?.originalText ?? null,
+                confidence: capture?.bySku.get(l.skuId)?.confidence ?? null,
               })),
             },
           },
         });
+        // One capture becomes one order, never two.
+        if (capture) {
+          await tx.aiCapture.updateMany({
+            where: { id: capture.id, status: "DRAFT" },
+            data: { status: "CONFIRMED" },
+          });
+        }
+        return created;
       });
       return { ok: true, orderId: order.id, number: order.number, status, duplicate: false };
     } catch (e) {

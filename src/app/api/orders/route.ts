@@ -5,6 +5,7 @@ import { placeOrder } from "@/lib/orders/place";
 
 const Body = z.object({
   idempotencyKey: z.uuid(),
+  captureId: z.string().min(1).max(40).optional(),
   note: z.string().trim().max(200).optional(),
   lines: z
     .array(
@@ -32,6 +33,7 @@ export async function POST(req: Request) {
     lines: parsed.data.lines,
     note: parsed.data.note,
     idempotencyKey: parsed.data.idempotencyKey,
+    captureId: parsed.data.captureId,
   });
 
   if (!result.ok) {

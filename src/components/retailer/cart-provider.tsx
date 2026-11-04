@@ -17,8 +17,13 @@ interface CartContextValue {
   priced: PricedOrder;
   lineFor: (skuId: string) => PricedLine | undefined;
   setQty: (skuId: string, n: number) => void;
+  /** Adds cases on top of what is already in the cart (used by "order by message"). */
+  addMany: (add: Qty) => void;
   replace: (next: Qty) => void;
   clear: () => void;
+  /** The reviewed AI capture this cart was built from, sent with the order. */
+  captureId: string | null;
+  setCaptureId: (id: string | null) => void;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -43,6 +48,8 @@ export function CartProvider({
   const storageKey = `rd_cart:${retailerId}`;
   const [qty, setQtyState] = useState<Qty>({});
   const [hydrated, setHydrated] = useState(false);
+  const [captureId, setCaptureIdState] = useState<string | null>(null);
+  const captureKey = `rd_capture:${retailerId}`;
   const byId = useMemo(() => new Map(items.map((i) => [i.id, i])), [items]);
 
   const clampTo = useCallback(
@@ -65,11 +72,26 @@ export function CartProvider({
       }
       // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time restore of persisted state
       setQtyState(cleaned);
+      const cap = localStorage.getItem(captureKey);
+      if (cap && Object.keys(cleaned).length > 0) setCaptureIdState(cap);
     } catch {
       /* private mode or corrupt data: start with an empty cart */
     }
     setHydrated(true);
-  }, [storageKey, clampTo]);
+  }, [storageKey, captureKey, clampTo]);
+
+  const setCaptureId = useCallback(
+    (id: string | null) => {
+      setCaptureIdState(id);
+      try {
+        if (id) localStorage.setItem(captureKey, id);
+        else localStorage.removeItem(captureKey);
+      } catch {
+        /* ignore */
+      }
+    },
+    [captureKey],
+  );
 
   const persist = useCallback(
     (next: Qty) => {
@@ -105,6 +127,23 @@ export function CartProvider({
       }
       persist(next);
       setQtyState(next);
+      // A different cart is no longer the one the AI reading described.
+      setCaptureId(null);
+    },
+    [clampTo, persist, setCaptureId],
+  );
+
+  const addMany = useCallback(
+    (add: Qty) => {
+      setQtyState((prev) => {
+        const next = { ...prev };
+        for (const [id, n] of Object.entries(add)) {
+          const c = clampTo(id, (next[id] ?? 0) + n);
+          if (c > 0) next[id] = c;
+        }
+        persist(next);
+        return next;
+      });
     },
     [clampTo, persist],
   );
@@ -133,8 +172,11 @@ export function CartProvider({
   const lineFor = useCallback((id: string) => lineMap.get(id), [lineMap]);
 
   const value = useMemo(
-    () => ({ items, lang, qty, hydrated, count: priced.lines.length, priced, lineFor, setQty, replace, clear }),
-    [items, lang, qty, hydrated, priced, lineFor, setQty, replace, clear],
+    () => ({
+      items, lang, qty, hydrated, count: priced.lines.length, priced, lineFor,
+      setQty, addMany, replace, clear, captureId, setCaptureId,
+    }),
+    [items, lang, qty, hydrated, priced, lineFor, setQty, addMany, replace, clear, captureId, setCaptureId],
   );
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

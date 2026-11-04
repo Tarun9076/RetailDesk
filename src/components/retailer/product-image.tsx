@@ -17,7 +17,8 @@ export function ProductImage({ name, brand, dim }: { name: string; brand: string
   return (
     <div
       aria-hidden
-      className={`flex aspect-square w-full flex-col items-center justify-center rounded-xl p-3 text-center ${dim ? "opacity-40 grayscale" : ""}`}
+      // A very narrow phone shows one product per row, so the picture goes wide and short.
+      className={`flex aspect-[2/1] w-full flex-col items-center justify-center rounded-xl p-3 text-center min-[360px]:aspect-square ${dim ? "opacity-40 grayscale" : ""}`}
       style={{ background: tint.bg, color: tint.fg }}
     >
       <span className="text-[11px] font-medium uppercase tracking-wide opacity-80">{brand}</span>

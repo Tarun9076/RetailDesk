@@ -34,7 +34,7 @@ export default async function OrderDetailPage(props: PageProps<"/orders/[id]">) 
 
   const held = order.status === "ON_HOLD";
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-2xl lg:max-w-none">
       {isNew && (
         <div
           className={`mb-5 flex items-start gap-3 rounded-2xl p-4 ${held ? "bg-amber-50 text-amber-900" : "bg-accent-soft text-accent-strong"}`}
@@ -50,64 +50,67 @@ export default async function OrderDetailPage(props: PageProps<"/orders/[id]">) 
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{fmt(t.orders.number, { n: order.number })}</h1>
-          <p className="text-sm text-muted">
-            {formatDateTimeLong(order.createdAt, lang)}
-          </p>
+          <p className="text-sm text-muted">{formatDateTimeLong(order.createdAt, lang)}</p>
         </div>
         <OrderStatus status={order.status} t={t.orders.status} />
       </div>
 
-      <ul className="mt-5 divide-y divide-line rounded-2xl border border-line">
-        {order.lines.map((l) => (
-          <li key={l.id} className="flex items-start justify-between gap-3 p-4">
-            <div className="min-w-0">
-              <p className="font-medium leading-snug">{lang === "hi" && l.sku.nameHi ? l.sku.nameHi : l.sku.name}</p>
-              <p className="text-sm text-muted">
-                {fmt(plural(l.qtyCases, t.cart.casesOne, t.cart.cases), { n: l.qtyCases })}
-                {l.freeCases > 0 && <span className="text-accent"> · {fmt(t.orders.free, { n: l.freeCases })}</span>}
-              </p>
-              {l.discountPaise > 0 && <p className="text-sm text-accent">−{formatPaise(l.discountPaise)}</p>}
+      {/* One column on a phone; the items beside the totals once there is room. */}
+      <div className="lg:mt-5 lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-8">
+        <ul className="mt-5 divide-y divide-line rounded-2xl border border-line lg:mt-0">
+          {order.lines.map((l) => (
+            <li key={l.id} className="flex items-start justify-between gap-3 p-4">
+              <div className="min-w-0">
+                <p className="font-medium leading-snug">{lang === "hi" && l.sku.nameHi ? l.sku.nameHi : l.sku.name}</p>
+                <p className="text-sm text-muted">
+                  {fmt(plural(l.qtyCases, t.cart.casesOne, t.cart.cases), { n: l.qtyCases })}
+                  {l.freeCases > 0 && <span className="text-accent"> · {fmt(t.orders.free, { n: l.freeCases })}</span>}
+                </p>
+                {l.discountPaise > 0 && <p className="text-sm text-accent">−{formatPaise(l.discountPaise)}</p>}
+              </div>
+              <p className="shrink-0 font-medium">{formatPaise(l.grossPaise - l.discountPaise + l.gstPaise)}</p>
+            </li>
+          ))}
+        </ul>
+
+        <aside className="lg:sticky lg:top-24">
+          <dl className="mt-5 space-y-2 rounded-2xl bg-surface p-4 text-[15px] lg:mt-0">
+            <div className="flex justify-between">
+              <dt className="text-muted">{t.cart.itemsTotal}</dt>
+              <dd>{formatPaise(order.subtotalPaise)}</dd>
             </div>
-            <p className="shrink-0 font-medium">{formatPaise(l.grossPaise - l.discountPaise + l.gstPaise)}</p>
-          </li>
-        ))}
-      </ul>
+            {order.discountPaise > 0 && (
+              <div className="flex justify-between text-accent">
+                <dt>{t.cart.schemeSavings}</dt>
+                <dd>−{formatPaise(order.discountPaise)}</dd>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <dt className="text-muted">{t.cart.gst}</dt>
+              <dd>{formatPaise(order.gstPaise)}</dd>
+            </div>
+            <div className="flex justify-between border-t border-line pt-3 text-lg font-semibold">
+              <dt>{t.cart.total}</dt>
+              <dd>{formatPaise(order.totalPaise)}</dd>
+            </div>
+          </dl>
 
-      <dl className="mt-5 space-y-2 rounded-2xl bg-surface p-4 text-[15px]">
-        <div className="flex justify-between">
-          <dt className="text-muted">{t.cart.itemsTotal}</dt>
-          <dd>{formatPaise(order.subtotalPaise)}</dd>
-        </div>
-        {order.discountPaise > 0 && (
-          <div className="flex justify-between text-accent">
-            <dt>{t.cart.schemeSavings}</dt>
-            <dd>−{formatPaise(order.discountPaise)}</dd>
+          {order.note && (
+            <p className="mt-4 text-sm text-muted">
+              {t.orders.note}: <span className="text-ink">{order.note}</span>
+            </p>
+          )}
+
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+            <RepeatOrderButton lines={order.lines.map((l) => ({ skuId: l.skuId, qtyCases: l.qtyCases }))} label={t.orders.repeat} />
+            <Link
+              href="/catalogue"
+              className="flex min-h-12 items-center justify-center rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-accent-strong"
+            >
+              {t.orders.back}
+            </Link>
           </div>
-        )}
-        <div className="flex justify-between">
-          <dt className="text-muted">{t.cart.gst}</dt>
-          <dd>{formatPaise(order.gstPaise)}</dd>
-        </div>
-        <div className="flex justify-between border-t border-line pt-3 text-lg font-semibold">
-          <dt>{t.cart.total}</dt>
-          <dd>{formatPaise(order.totalPaise)}</dd>
-        </div>
-      </dl>
-
-      {order.note && (
-        <p className="mt-4 text-sm text-muted">
-          {t.orders.note}: <span className="text-ink">{order.note}</span>
-        </p>
-      )}
-
-      <div className="mt-6 grid gap-3 sm:grid-cols-2">
-        <RepeatOrderButton lines={order.lines.map((l) => ({ skuId: l.skuId, qtyCases: l.qtyCases }))} label={t.orders.repeat} />
-        <Link
-          href="/catalogue"
-          className="flex min-h-12 items-center justify-center rounded-xl bg-accent px-4 text-sm font-medium text-white hover:bg-accent-strong"
-        >
-          {t.orders.back}
-        </Link>
+        </aside>
       </div>
     </div>
   );

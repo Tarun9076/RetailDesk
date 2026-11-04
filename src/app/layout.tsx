@@ -22,6 +22,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  // Draw under the notch and home bar; the headers and bottom bars add their own safe-area padding.
+  viewportFit: "cover",
   themeColor: "#1b6b47",
 };
 

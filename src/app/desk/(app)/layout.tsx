@@ -9,7 +9,10 @@ export default async function DeskLayout({ children }: LayoutProps<"/desk">) {
       {/* The office works in English and on a big screen: use the whole window. */}
       <AppHeader subtitle={user.name} signOutTo="/desk/login" showLanguage={false} fluid />
       <DeskNav />
-      <main className="w-full flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+      {/* Side padding grows with the screen, and keeps clear of a phone's notch in landscape. */}
+      <main className="w-full flex-1 py-6 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] sm:px-6 lg:px-8 2xl:px-12">
+        {children}
+      </main>
     </>
   );
 }

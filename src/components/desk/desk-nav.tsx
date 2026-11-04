@@ -15,7 +15,7 @@ export function DeskNav() {
   const pathname = usePathname();
   return (
     <nav aria-label="Desk" className="border-b border-line bg-bg print:hidden">
-      <div className="flex w-full gap-1 overflow-x-auto px-4 sm:px-6 lg:px-8">
+      <div className="no-scrollbar flex w-full gap-1 overflow-x-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
         {TABS.map((tab) => {
           const active = tab.match(pathname);
           return (

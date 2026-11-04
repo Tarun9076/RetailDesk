@@ -175,7 +175,7 @@ export function CaptureView({ t }: { t: Dict["capture"] }) {
 
   if (phase === "input") {
     return (
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto max-w-2xl lg:max-w-3xl">
         <h1 className="text-2xl font-semibold tracking-tight">{t.title}</h1>
         <p className="mt-2 text-muted">{t.intro}</p>
 
@@ -227,7 +227,7 @@ export function CaptureView({ t }: { t: Dict["capture"] }) {
 
   // review
   return (
-    <div className="mx-auto max-w-2xl pb-24">
+    <div className="mx-auto max-w-2xl pb-24 md:max-w-4xl lg:max-w-5xl">
       <h1 className="text-2xl font-semibold tracking-tight">{t.title}</h1>
       <p
         className={`mt-3 flex items-start gap-2 rounded-xl px-4 py-3 text-sm ${
@@ -248,7 +248,8 @@ export function CaptureView({ t }: { t: Dict["capture"] }) {
           </div>
         </div>
       ) : (
-        <ul className="mt-4 space-y-3">
+        // Each reviewed line is a card: one per row on a phone, two side by side on a tablet or laptop.
+        <ul className="mt-4 space-y-3 md:grid md:grid-cols-2 md:items-start md:gap-4 md:space-y-0">
           {active.map((l) => {
             const s = statuses.get(l.dto.index)!;
             const suggested = [l.dto.skuId, ...l.dto.alternatives.map((a) => a.skuId)].filter(
@@ -361,7 +362,7 @@ export function CaptureView({ t }: { t: Dict["capture"] }) {
 
       {active.length > 0 && (
         <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-bg/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur">
-          <div className="mx-auto flex max-w-2xl gap-2">
+          <div className="mx-auto flex max-w-2xl gap-2 md:max-w-4xl lg:max-w-5xl">
             <button type="button" onClick={startAgain} className="min-h-14 shrink-0 rounded-xl border border-line px-4 text-sm font-medium text-muted hover:bg-surface">
               {t.again}
             </button>

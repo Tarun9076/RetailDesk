@@ -13,7 +13,7 @@ export function RetailerNav({ t }: { t: Dict["nav"] }) {
   ];
   return (
     <nav aria-label="Main" className="border-b border-line bg-bg">
-      <div className="mx-auto flex max-w-5xl gap-1 overflow-x-auto px-4 sm:px-6">
+      <div className="no-scrollbar mx-auto flex max-w-6xl gap-1 overflow-x-auto px-4 sm:px-6">
         {tabs.map((tab) => {
           const active = tab.match.some((m) => pathname.startsWith(m));
           return (

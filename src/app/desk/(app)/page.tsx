@@ -45,7 +45,7 @@ export default async function DeskQueue(props: PageProps<"/desk">) {
     <div>
       <h1 className="text-2xl font-semibold tracking-tight">Orders</h1>
 
-      <div className="mt-4 flex gap-2 overflow-x-auto pb-1" role="tablist">
+      <div className="no-scrollbar mt-4 flex gap-2 overflow-x-auto pb-1" role="tablist">
         {TABS.map((t) => {
           const active = t.key === tab.key;
           const n = countOf(t.statuses);
@@ -76,7 +76,8 @@ export default async function DeskQueue(props: PageProps<"/desk">) {
           <p className="mt-4 text-muted">{EMPTY[tab.key]}</p>
         </div>
       ) : (
-        <div className="mt-4 overflow-hidden rounded-2xl border border-line">
+        // Cards on a phone, two columns of cards on a tablet, one table on a laptop or monitor.
+        <div className="mt-4 lg:overflow-hidden lg:rounded-2xl lg:border lg:border-line">
           {/* Column names only where there is room for columns. */}
           <div className={`hidden bg-surface px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted lg:gap-4 ${ROW_GRID}`}>
             <span>Order</span>
@@ -86,9 +87,9 @@ export default async function DeskQueue(props: PageProps<"/desk">) {
             <span>Status</span>
             <span className="text-right">Total</span>
           </div>
-          <ul className="divide-y divide-line">
+          <ul className="grid gap-3 md:grid-cols-2 lg:block lg:divide-y lg:divide-line">
             {orders.map((o) => (
-              <li key={o.id}>
+              <li key={o.id} className="overflow-hidden rounded-2xl border border-line lg:rounded-none lg:border-0">
                 <Link
                   href={`/desk/orders/${o.id}`}
                   className={`flex flex-col gap-1.5 px-4 py-4 hover:bg-surface sm:px-5 ${ROW_GRID} lg:items-center lg:gap-4`}

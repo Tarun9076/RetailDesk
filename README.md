@@ -267,6 +267,20 @@ The biggest win was a decision, not an optimisation: the app uses **no web fonts
 
 Other choices that help: product pictures are drawn in code instead of downloaded, the cart lives on the phone, and every page works with large tap targets (minimum 44 to 56 pixels).
 
+### One app, every screen
+
+The layout adapts to the device instead of only shrinking. I measured every screen in a real browser at seven widths (320, 375, 414, 768, 1024, 1280 and 1920 pixels), looking for sideways scrolling, parts poking off the screen, and tap targets that were too small, then fixed what I found.
+
+| Screen size | What changes |
+| --- | --- |
+| **Very small phone (under 360 px)** | One product per row, so the quantity box can never be squeezed. Sign out becomes an icon so the logo keeps its room. |
+| **Phone** | Two products per row, a bottom cart bar, large tap targets (44 px or more), a bottom sheet for app install help. |
+| **Tablet** | Three products per row. Orders and reviewed lines sit in two columns. The desk order list is two columns of cards. |
+| **Laptop** | The cart becomes two columns: items beside a sticky summary with the Place order button. Order detail does the same. Four to five products per row. The desk order list becomes a table. |
+| **Large monitor** | The desk uses the whole window, with wider margins. The dashboard, tables and charts stretch to fit. |
+
+Device details that matter on a real phone: content stays clear of the notch and home bar; a phone held sideways does not lose its screen to a sticky header; taps respond at once with no double-tap zoom; text never rescales by itself on rotation; animations stop if the phone's "reduce motion" setting is on; and the swipeable tab rows draw no scrollbar. Inputs are 16 px or larger, so iPhones do not zoom in when you tap one.
+
 ### Installable, and safe offline
 
 The app ships a web app manifest and icons (drawn in code), so it can be added to the home screen, with shortcuts to "Order by message", the cart and orders. A tiny service worker does only two things: it shows a friendly offline page when a page cannot be loaded, and it keeps the app's own static files on the phone so repeat visits are quick. **It never stores pages, API answers or anything about a shop**, so prices, credit and orders always come fresh and a shared phone cannot leak them from a cache. The service worker only runs in production builds, so development is never confused by it.

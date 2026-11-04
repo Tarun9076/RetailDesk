@@ -64,14 +64,14 @@ export default async function ShopsPage(props: PageProps<"/desk/shops">) {
         not count.
       </p>
 
-      <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
         {stat(`Ordered in the last ${QUIET_AFTER_DAYS} days`, counts.active, "text-accent")}
         {stat(`Quiet ${QUIET_AFTER_DAYS}–${LOST_AFTER_DAYS - 1} days`, counts.quiet, "text-amber-700")}
         {stat(`Quiet ${LOST_AFTER_DAYS}+ days`, counts.lost, "text-danger")}
         {stat("Never ordered", counts.never, "text-muted")}
       </div>
 
-      <div className="mt-6 flex gap-2 overflow-x-auto pb-1" role="tablist">
+      <div className="no-scrollbar mt-6 flex gap-2 overflow-x-auto pb-1" role="tablist">
         {FILTERS.map((f) => {
           const active = f.key === filter.key;
           return (

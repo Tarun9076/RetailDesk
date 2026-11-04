@@ -61,7 +61,7 @@ export default async function SalesDashboard(props: PageProps<"/desk/dashboard">
             scheme discounts and before GST.
           </p>
         </div>
-        <div className="flex gap-2 overflow-x-auto" role="tablist" aria-label="Date range">
+        <div className="no-scrollbar flex max-w-full gap-2 overflow-x-auto" role="tablist" aria-label="Date range">
           {RANGES.map((r) => {
             const active = r.key === key;
             return (
@@ -92,7 +92,8 @@ export default async function SalesDashboard(props: PageProps<"/desk/dashboard">
           <Delta now={c.netPaise} before={p.netPaise} days={period.days} />
         </section>
 
-        <div className="grid grid-cols-2 gap-4 lg:col-span-2 xl:grid-cols-3">
+        {/* 2 columns on a phone, 3 on a tablet, 2 beside the headline on a laptop, 3 on a big monitor */}
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:col-span-2 lg:grid-cols-2 xl:grid-cols-3">
           <Tile label="Orders" value={String(c.orders)}>
             <Delta now={c.orders} before={p.orders} days={period.days} />
           </Tile>

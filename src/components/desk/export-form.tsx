@@ -103,9 +103,10 @@ export function ExportForm({ rows }: { rows: ExportRow[] }) {
         id={`row-${r.id}`}
         checked={selected.has(r.id)}
         onChange={() => toggle(r.id)}
-        className="h-5 w-5 shrink-0 accent-[var(--accent)]"
+        className="h-6 w-6 shrink-0 accent-[var(--accent)]"
       />
-      <label htmlFor={`row-${r.id}`} className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-3">
+      {/* The whole row is the tap target, not just the small box. */}
+      <label htmlFor={`row-${r.id}`} className="flex min-h-12 min-w-0 flex-1 cursor-pointer items-center justify-between gap-3">
         <span className="min-w-0">
           <span className="block font-medium">{r.number}</span>
           <span className="block truncate text-sm text-muted">
@@ -163,7 +164,7 @@ export function ExportForm({ rows }: { rows: ExportRow[] }) {
       )}
       </div>
 
-      <div className="sticky bottom-0 -mx-4 mt-6 border-t border-line bg-bg/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+      <div className="sticky bottom-0 -mx-4 mt-6 border-t border-line bg-bg/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 2xl:-mx-12 2xl:px-12">
         {error && (
           <div className="mb-3">
             <ErrorNote>{error}</ErrorNote>

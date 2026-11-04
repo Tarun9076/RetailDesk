@@ -88,125 +88,130 @@ export function CartView({
   const blocked = priced.hasIssues || busy;
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-2xl lg:max-w-none">
       <h1 className="text-2xl font-semibold tracking-tight">{t.title}</h1>
 
-      <ul className="mt-4 divide-y divide-line rounded-2xl border border-line">
-        {priced.lines.map((line) => {
-          const item = byId.get(line.skuId)!;
-          const name = lang === "hi" && item.nameHi ? item.nameHi : item.name;
-          const max = maxOrderableCases(item.stockCases, item.scheme);
-          return (
-            <li key={line.skuId} className="p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="font-medium leading-snug">{name}</p>
-                  <p className="mt-0.5 text-sm text-muted">
-                    {fmt(plural(line.qtyCases, t.casesOne, t.cases), { n: line.qtyCases })} ×{" "}
-                    {formatPaise(item.casePricePaise)}
-                  </p>
+      {/* One column on a phone; items beside a sticky summary once there is room. */}
+      <div className="lg:mt-4 lg:grid lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start lg:gap-8 xl:grid-cols-[minmax(0,1fr)_26rem]">
+        <ul className="mt-4 divide-y divide-line rounded-2xl border border-line lg:mt-0">
+          {priced.lines.map((line) => {
+            const item = byId.get(line.skuId)!;
+            const name = lang === "hi" && item.nameHi ? item.nameHi : item.name;
+            const max = maxOrderableCases(item.stockCases, item.scheme);
+            return (
+              <li key={line.skuId} className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium leading-snug">{name}</p>
+                    <p className="mt-0.5 text-sm text-muted">
+                      {fmt(plural(line.qtyCases, t.casesOne, t.cases), { n: line.qtyCases })} ×{" "}
+                      {formatPaise(item.casePricePaise)}
+                    </p>
+                  </div>
+                  <p className="shrink-0 font-semibold">{formatPaise(line.grossPaise)}</p>
                 </div>
-                <p className="shrink-0 font-semibold">{formatPaise(line.grossPaise)}</p>
-              </div>
 
-              <div className="mt-3 flex items-center justify-between gap-3">
-                <div className="w-44">
-                  <QtyStepper value={line.qtyCases} max={max} onChange={(v) => setQty(line.skuId, v)} label={name} />
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <div className="w-44">
+                    <QtyStepper value={line.qtyCases} max={max} onChange={(v) => setQty(line.skuId, v)} label={name} />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setQty(line.skuId, 0)}
+                    className="flex min-h-12 items-center gap-1.5 rounded-xl px-3 text-sm text-muted hover:bg-surface"
+                  >
+                    <Trash2 size={16} aria-hidden />
+                    {t.remove}
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setQty(line.skuId, 0)}
-                  className="flex min-h-12 items-center gap-1.5 rounded-xl px-3 text-sm text-muted hover:bg-surface"
-                >
-                  <Trash2 size={16} aria-hidden />
-                  {t.remove}
-                </button>
-              </div>
 
-              <div className="mt-2 space-y-1 text-sm">
-                {line.freeCases > 0 && item.scheme && (
-                  <p className="font-medium text-accent">
-                    {fmt(t.free, { n: line.freeCases })} · {schemeText(item.scheme, lang)}
-                  </p>
-                )}
-                {line.discountPaise > 0 && item.scheme && (
-                  <p className="font-medium text-accent">
-                    −{formatPaise(line.discountPaise)} · {schemeText(item.scheme, lang)}
-                  </p>
-                )}
-                {line.nextBenefit && (
-                  <p className="text-muted">{nextBenefitText(line.nextBenefit, lang, line.freeCases > 0)}</p>
-                )}
-                {line.issue && (
-                  <p role="alert" className="flex items-start gap-1.5 text-danger">
-                    <TriangleAlert size={16} aria-hidden className="mt-0.5 shrink-0" />
-                    {line.issue.code === "OUT_OF_STOCK"
-                      ? t.outOfStock
-                      : fmt(t.notEnough, { n: line.issue.maxOrderableCases })}
-                  </p>
-                )}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+                <div className="mt-2 space-y-1 text-sm">
+                  {line.freeCases > 0 && item.scheme && (
+                    <p className="font-medium text-accent">
+                      {fmt(t.free, { n: line.freeCases })} · {schemeText(item.scheme, lang)}
+                    </p>
+                  )}
+                  {line.discountPaise > 0 && item.scheme && (
+                    <p className="font-medium text-accent">
+                      −{formatPaise(line.discountPaise)} · {schemeText(item.scheme, lang)}
+                    </p>
+                  )}
+                  {line.nextBenefit && (
+                    <p className="text-muted">{nextBenefitText(line.nextBenefit, lang, line.freeCases > 0)}</p>
+                  )}
+                  {line.issue && (
+                    <p role="alert" className="flex items-start gap-1.5 text-danger">
+                      <TriangleAlert size={16} aria-hidden className="mt-0.5 shrink-0" />
+                      {line.issue.code === "OUT_OF_STOCK"
+                        ? t.outOfStock
+                        : fmt(t.notEnough, { n: line.issue.maxOrderableCases })}
+                    </p>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
 
-      <dl className="mt-5 space-y-2 rounded-2xl bg-surface p-4 text-[15px]">
-        <div className="flex justify-between">
-          <dt className="text-muted">{t.itemsTotal}</dt>
-          <dd>{formatPaise(priced.subtotalPaise)}</dd>
+        <aside className="lg:sticky lg:top-24">
+        <dl className="mt-5 space-y-2 rounded-2xl bg-surface p-4 text-[15px] lg:mt-0">
+          <div className="flex justify-between">
+            <dt className="text-muted">{t.itemsTotal}</dt>
+            <dd>{formatPaise(priced.subtotalPaise)}</dd>
+          </div>
+          {priced.discountPaise > 0 && (
+            <div className="flex justify-between text-accent">
+              <dt>{t.schemeSavings}</dt>
+              <dd>−{formatPaise(priced.discountPaise)}</dd>
+            </div>
+          )}
+          <div className="flex justify-between">
+            <dt className="text-muted">{t.gst}</dt>
+            <dd>{formatPaise(priced.gstPaise)}</dd>
+          </div>
+          <div className="flex justify-between border-t border-line pt-3 text-lg font-semibold">
+            <dt>{t.total}</dt>
+            <dd>{formatPaise(priced.totalPaise)}</dd>
+          </div>
+          <div className="flex justify-between text-sm text-muted">
+            <dt>{t.credit}</dt>
+            <dd>{formatPaise(availableCreditPaise)}</dd>
+          </div>
+        </dl>
+
+        {overCredit && (
+          <p className="mt-3 flex items-start gap-2 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            <TriangleAlert size={18} aria-hidden className="mt-0.5 shrink-0" />
+            {t.creditWarning}
+          </p>
+        )}
+
+        <div className="mt-4">
+          <label htmlFor="note" className="mb-1.5 block text-sm font-medium text-muted">
+            {t.note}
+          </label>
+          <textarea
+            id="note"
+            value={note}
+            onChange={(e) => setNote(e.target.value.slice(0, 200))}
+            rows={2}
+            lang={lang}
+            className="w-full rounded-xl border border-line bg-bg px-4 py-3 text-base focus:border-accent"
+          />
         </div>
-        {priced.discountPaise > 0 && (
-          <div className="flex justify-between text-accent">
-            <dt>{t.schemeSavings}</dt>
-            <dd>−{formatPaise(priced.discountPaise)}</dd>
+
+        {error && (
+          <div className="mt-4">
+            <ErrorNote>{error}</ErrorNote>
           </div>
         )}
-        <div className="flex justify-between">
-          <dt className="text-muted">{t.gst}</dt>
-          <dd>{formatPaise(priced.gstPaise)}</dd>
-        </div>
-        <div className="flex justify-between border-t border-line pt-3 text-lg font-semibold">
-          <dt>{t.total}</dt>
-          <dd>{formatPaise(priced.totalPaise)}</dd>
-        </div>
-        <div className="flex justify-between text-sm text-muted">
-          <dt>{t.credit}</dt>
-          <dd>{formatPaise(availableCreditPaise)}</dd>
-        </div>
-      </dl>
 
-      {overCredit && (
-        <p className="mt-3 flex items-start gap-2 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          <TriangleAlert size={18} aria-hidden className="mt-0.5 shrink-0" />
-          {t.creditWarning}
-        </p>
-      )}
-
-      <div className="mt-4">
-        <label htmlFor="note" className="mb-1.5 block text-sm font-medium text-muted">
-          {t.note}
-        </label>
-        <textarea
-          id="note"
-          value={note}
-          onChange={(e) => setNote(e.target.value.slice(0, 200))}
-          rows={2}
-          lang={lang}
-          className="w-full rounded-xl border border-line bg-bg px-4 py-3 text-base focus:border-accent"
-        />
-      </div>
-
-      {error && (
         <div className="mt-4">
-          <ErrorNote>{error}</ErrorNote>
+          <Button type="button" disabled={blocked} onClick={place}>
+            {busy ? t.placing : `${t.place} · ${formatPaise(priced.totalPaise)}`}
+          </Button>
         </div>
-      )}
-
-      <div className="mt-4">
-        <Button type="button" disabled={blocked} onClick={place}>
-          {busy ? t.placing : `${t.place} · ${formatPaise(priced.totalPaise)}`}
-        </Button>
+        </aside>
       </div>
     </div>
   );

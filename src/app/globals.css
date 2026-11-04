@@ -52,6 +52,59 @@ body {
   color: var(--ink);
   font-family: var(--font-stack);
   -webkit-tap-highlight-color: transparent;
+  /* A phone must never scale the text on its own after a rotation. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Taps respond straight away: no 300 ms wait or accidental double-tap zoom on controls. */
+a,
+button,
+input,
+select,
+textarea,
+label,
+summary,
+[role="tab"] {
+  touch-action: manipulation;
+}
+
+/* Scrolling strips of tabs and chips: swipe on a phone, no scrollbar drawn under them. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Long unbroken words (a shop name, a code) wrap instead of pushing the page sideways. */
+h1,
+h2,
+h3,
+p,
+li,
+dd,
+dt {
+  overflow-wrap: anywhere;
+}
+
+/* Respect a phone's "reduce motion" setting. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* A phone held sideways has very little height: do not let a sticky header eat it. */
+@media (max-height: 480px) and (orientation: landscape) {
+  .sticky-header {
+    position: static;
+  }
 }
 
 :focus-visible {

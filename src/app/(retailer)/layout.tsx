@@ -13,7 +13,10 @@ export default async function RetailerLayout({ children }: LayoutProps<"/">) {
     <CartProvider retailerId={retailer.id} items={items} lang={lang}>
       <AppHeader subtitle={retailer.shopName} signOutTo="/login" />
       <RetailerNav t={t.nav} />
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-28 pt-5 sm:px-6">{children}</main>
+      {/* A centred column that grows with the screen: phone, tablet, laptop. The bottom padding clears the cart bar and the home indicator. */}
+      <main className="mx-auto w-full max-w-6xl flex-1 pb-[calc(7rem+env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pt-5 sm:px-6">
+        {children}
+      </main>
       <CartBar t={t.catalogue} />
     </CartProvider>
   );

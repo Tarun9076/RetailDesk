@@ -20,7 +20,7 @@ export function ProductCard({ item, t }: { item: CatalogueItem; t: Dict["catalog
   const name = lang === "hi" && item.nameHi ? item.nameHi : item.name;
 
   return (
-    <article className="flex flex-col rounded-2xl border border-line bg-bg p-3">
+    <article className="flex flex-col rounded-2xl border border-line bg-bg p-2.5 min-[360px]:p-3">
       <ProductImage name={item.name} brand={item.brand} dim={out} />
 
       <h2 className="mt-3 line-clamp-2 min-h-[2.75rem] text-[15px] font-medium leading-snug">{name}</h2>
@@ -66,7 +66,7 @@ export function ProductCard({ item, t }: { item: CatalogueItem; t: Dict["catalog
           </button>
         ) : (
           <>
-            <QtyStepper value={n} max={max} onChange={(v) => setQty(item.id, v)} label={name} />
+            <QtyStepper value={n} max={max} onChange={(v) => setQty(item.id, v)} label={name} compact />
             <div className="mt-2 space-y-1 text-xs">
               {line && (line.freeCases > 0 || line.discountPaise > 0) && (
                 <p className="flex items-center gap-1 font-medium text-accent">

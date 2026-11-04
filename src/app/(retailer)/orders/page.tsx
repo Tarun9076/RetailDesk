@@ -22,7 +22,7 @@ export default async function OrdersPage() {
   });
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-2xl md:max-w-none">
       <h1 className="text-2xl font-semibold tracking-tight">{t.orders.title}</h1>
 
       {orders.length === 0 ? (
@@ -37,7 +37,8 @@ export default async function OrdersPage() {
           </Link>
         </div>
       ) : (
-        <ul className="mt-4 space-y-3">
+        // A list on a phone, a grid of cards on a tablet or laptop.
+        <ul className="mt-4 space-y-3 md:grid md:grid-cols-2 md:gap-4 md:space-y-0 lg:grid-cols-3">
           {orders.map((o) => (
             <li key={o.id} className="rounded-2xl border border-line p-4">
               <Link href={`/orders/${o.id}`} className="block">

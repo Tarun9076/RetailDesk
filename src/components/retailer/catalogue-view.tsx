@@ -41,7 +41,7 @@ export function CatalogueView({ t }: { t: Dict["catalogue"] }) {
         />
       </div>
 
-      <div className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0" role="group">
+      <div className="no-scrollbar -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0" role="group">
         <button type="button" className={chip(brand === null)} onClick={() => setBrand(null)}>
           {t.all}
         </button>
@@ -55,7 +55,8 @@ export function CatalogueView({ t }: { t: Dict["catalogue"] }) {
       {visible.length === 0 ? (
         <p className="py-16 text-center text-muted">{t.empty}</p>
       ) : (
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        // 1 column on a 320 px phone, then 2, 3, 4 and 5 as the screen grows.
+        <div className="mt-4 grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {visible.map((item) => (
             <ProductCard key={item.id} item={item} t={t} />
           ))}

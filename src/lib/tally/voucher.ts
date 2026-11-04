@@ -14,6 +14,7 @@
  */
 
 export interface TallyLine {
+  skuCode?: string; // shown in the Excel register, not needed by the Tally file
   itemName: string;
   qtyCases: number;
   freeCases: number;
@@ -28,6 +29,7 @@ export interface TallyOrder {
   number: string;
   date: Date;
   partyLedger: string;
+  city?: string; // shown in the Excel register
   note?: string | null;
   lines: TallyLine[];
 }

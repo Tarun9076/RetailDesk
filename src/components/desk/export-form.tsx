@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Download } from "lucide-react";
+import { CheckCircle2, FileSpreadsheet } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -22,7 +22,7 @@ export function ExportForm({ rows }: { rows: ExportRow[] }) {
   const done = rows.filter((r) => r.status === "EXPORTED");
 
   const [selected, setSelected] = useState<Set<string>>(() => new Set(ready.map((r) => r.id)));
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<"xlsx" | "xml" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -51,15 +51,15 @@ export function ExportForm({ rows }: { rows: ExportRow[] }) {
     });
   }
 
-  async function download() {
+  async function download(format: "xlsx" | "xml") {
     setError(null);
     setMessage(null);
-    setBusy(true);
+    setBusy(format);
     try {
       const res = await fetch("/api/desk/export", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderIds: chosen.map((r) => r.id) }),
+        body: JSON.stringify({ orderIds: chosen.map((r) => r.id), format }),
       });
       if (!res.ok) {
         setError(
@@ -68,10 +68,12 @@ export function ExportForm({ rows }: { rows: ExportRow[] }) {
             : "The export did not work. Please try again.",
         );
         if (res.status === 409) router.refresh();
-        setBusy(false);
+        setBusy(null);
         return;
       }
-      const name = /filename="([^"]+)"/.exec(res.headers.get("Content-Disposition") ?? "")?.[1] ?? "tally-sales.xml";
+      const name =
+        /filename="([^"]+)"/.exec(res.headers.get("Content-Disposition") ?? "")?.[1] ??
+        (format === "xlsx" ? "sales-register.xlsx" : "tally-sales.xml");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -91,7 +93,7 @@ export function ExportForm({ rows }: { rows: ExportRow[] }) {
     } catch {
       setError("No connection. Nothing was exported. Please try again.");
     }
-    setBusy(false);
+    setBusy(null);
   }
 
   const row = (r: ExportRow) => (
@@ -127,9 +129,11 @@ export function ExportForm({ rows }: { rows: ExportRow[] }) {
         </p>
       )}
 
+      {/* Side by side on a wide screen, stacked on a phone. */}
+      <div className="xl:grid xl:grid-cols-2 xl:items-start xl:gap-8">
       <section>
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold">Ready for Tally ({ready.length})</h2>
+          <h2 className="text-lg font-semibold">Ready to export ({ready.length})</h2>
           {ready.length > 0 && (
             <div className="flex gap-1 text-sm">
               <button type="button" onClick={() => setAllReady(true)} className="min-h-11 rounded-lg px-3 text-accent hover:bg-accent-soft">
@@ -151,14 +155,15 @@ export function ExportForm({ rows }: { rows: ExportRow[] }) {
       </section>
 
       {done.length > 0 && (
-        <section className="mt-8">
+        <section className="mt-8 xl:mt-0">
           <h2 className="text-lg font-semibold">Recently exported</h2>
           <p className="text-sm text-muted">Tick any to download them again. Nothing changes in the system.</p>
           <ul className="mt-3 divide-y divide-line rounded-2xl border border-line">{done.map(row)}</ul>
         </section>
       )}
+      </div>
 
-      <div className="sticky bottom-0 -mx-4 mt-6 border-t border-line bg-bg/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-2xl sm:border">
+      <div className="sticky bottom-0 -mx-4 mt-6 border-t border-line bg-bg/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         {error && (
           <div className="mb-3">
             <ErrorNote>{error}</ErrorNote>
@@ -170,15 +175,26 @@ export function ExportForm({ rows }: { rows: ExportRow[] }) {
               ? "Select orders to export."
               : `${newCount} new${againCount > 0 ? ` + ${againCount} again` : ""} · ${formatPaise(total)}`}
           </p>
-          <button
-            type="button"
-            disabled={busy || chosen.length === 0}
-            onClick={download}
-            className="flex min-h-14 items-center justify-center gap-2 rounded-xl bg-accent px-6 text-base font-medium text-white hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <Download size={18} aria-hidden />
-            {busy ? "Preparing file…" : "Download Tally XML"}
-          </button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <button
+              type="button"
+              disabled={busy !== null || chosen.length === 0}
+              onClick={() => download("xml")}
+              className="min-h-12 rounded-xl px-4 text-sm font-medium text-muted hover:bg-surface disabled:cursor-not-allowed disabled:opacity-50"
+              title="For importing into Tally Prime"
+            >
+              {busy === "xml" ? "Preparing…" : "Tally XML instead"}
+            </button>
+            <button
+              type="button"
+              disabled={busy !== null || chosen.length === 0}
+              onClick={() => download("xlsx")}
+              className="flex min-h-14 items-center justify-center gap-2 rounded-xl bg-accent px-6 text-base font-medium text-white hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <FileSpreadsheet size={18} aria-hidden />
+              {busy === "xlsx" ? "Preparing Excel file…" : "Download Excel"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

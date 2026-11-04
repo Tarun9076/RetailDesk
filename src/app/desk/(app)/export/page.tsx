@@ -30,11 +30,12 @@ export default async function ExportPage() {
   }));
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <h1 className="text-2xl font-semibold tracking-tight">Tally export</h1>
-      <p className="mb-6 mt-1 text-muted">
-        Download confirmed orders as one Tally import file (a Sales voucher per order). Exported orders move out of
-        the queue and the shop&apos;s account balance goes up by the order total.
+    <div>
+      <h1 className="text-2xl font-semibold tracking-tight">Export</h1>
+      <p className="mb-6 mt-1 max-w-3xl text-muted">
+        Download confirmed orders as an Excel sales register: one row per order, the line items behind it, and a GST
+        summary by rate. Exported orders move out of the queue and the shop&apos;s account balance goes up by the
+        order total.
       </p>
       <ExportForm rows={rows} />
     </div>

@@ -7,7 +7,7 @@ import { OtpLoginForm } from "./otp-login-form";
 
 export default async function LoginPage() {
   const user = await getCurrentUser();
-  if (user) redirect(user.role === "DESK" ? "/desk" : "/catalogue");
+  if (user) redirect(user.role === "DESK" ? "/desk" : user.role === "SALESMAN" ? "/sales" : "/catalogue");
 
   const { t } = await getDict();
   return (

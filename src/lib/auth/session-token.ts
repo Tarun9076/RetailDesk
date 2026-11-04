@@ -1,6 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 
-export type Role = "RETAILER" | "DESK";
+export type Role = "RETAILER" | "DESK" | "SALESMAN";
 
 export interface SessionPayload {
   sub: string; // user id
@@ -12,6 +12,8 @@ export interface SessionPayload {
 export const SESSION_TTL_SECONDS: Record<Role, number> = {
   RETAILER: 30 * 24 * 3600,
   DESK: 12 * 3600,
+  // A salesman's phone holds shop prices and credit, so the login lasts a working week, not a month.
+  SALESMAN: 7 * 24 * 3600,
 };
 
 const key = (secret: string) => new TextEncoder().encode(secret);
@@ -42,7 +44,7 @@ export async function verifySession(
       currentDate: now,
     });
     const role = payload.role;
-    if (typeof payload.sub !== "string" || (role !== "RETAILER" && role !== "DESK")) return null;
+    if (typeof payload.sub !== "string" || (role !== "RETAILER" && role !== "DESK" && role !== "SALESMAN")) return null;
     return {
       sub: payload.sub,
       role,

@@ -54,6 +54,15 @@ RetailDesk lets shops see the truth up front (stock, price, scheme, credit) and 
 - Use everything in **English or Hindi**.
 - **Download the app:** a **Download app** button is always in the header (and on the sign-in screens) until the app is installed. Where the browser allows it, one tap opens its own install dialog. Otherwise a short sheet shows the exact steps for that phone. If there is no signal, a friendly offline page appears and the cart stays safe on the phone.
 
+**For salesmen (on the road, even with no signal)**
+
+- Sign in with their own mobile number and an SMS code. The app opens on **My shops**: only the shops the office assigned to them, with the shops that have gone quiet (14+ days) listed first under **Visit first**.
+- Open a shop to see **that shop's own prices**, stock, schemes and credit left, and take an order on its behalf. The same live pricing, scheme hints and credit warning the shopkeeper sees.
+- **Works offline.** The phone keeps every assigned shop's prices, stock, schemes and credit. An order taken with no signal is saved on the phone and sent on its own when the signal returns. A sync button and a status pill in the header show what is waiting.
+- **The office has the last word.** When an offline order is sent, the server prices it again. If a price, a scheme or the stock moved in the meantime, the salesman is shown exactly what changed (for example *"The total changed from ₹10,889.48 to ₹10,948.48"*) so they can tell the shopkeeper. If stock ran out, the order comes back as **Needs your attention**, and *Change and send again* puts it back in the cart at what is available.
+- **Safe on a shared phone.** Signing out deletes the shops, prices and credit from the phone. Orders not yet sent stay, hidden from anyone else who signs in, and go out the next time that salesman signs in.
+- The office sees **who took each order** (and when, if it was taken offline) and assigns shops on the **Salesmen** tab.
+
 **For the office (order desk)**
 
 - Sign in with email and password (with an eye button to check what you typed). Only desk staff can enter the desk area. The desk uses the **whole screen** on a big monitor.
@@ -63,6 +72,7 @@ RetailDesk lets shops see the truth up front (stock, price, scheme, credit) and 
 - **AI orders** are marked, and show the shop's original message plus the words they wrote for each line with a confidence label. The desk can **change a line's product**: the order is priced again, and the app remembers the fix for that shop.
 - **Decisions:** confirm an order, release a credit hold (your name is recorded), or cancel with a required reason. Cancelling puts the stock back.
 - **Excel export:** pick confirmed orders and download an **Excel sales register** (`.xlsx`): one row per order, the line items behind it, and a GST summary by rate, with live totals. A Tally XML import file is still available as a secondary option. Re-download an old file any time without changing anything.
+- **Salesmen tab:** the roster of 18 salesmen with their shops, orders and value over 30 days, and a dropdown beside every shop to assign it. Shops with no salesman are listed first.
 - **Van loading list:** what to pick from the godown, and what drops at each shop. Printable.
 - **Shops dashboard:** which shops have gone quiet (no order in 14+ days, or 30+), with last order date, 90-day orders, credit left, and one-tap **Call** and **WhatsApp** buttons. Shops that never ordered are listed too.
 
@@ -83,7 +93,9 @@ RetailDesk lets shops see the truth up front (stock, price, scheme, credit) and 
 | AI order capture from a pasted text message, with review and learning | Done, with tests |
 | Shops dashboard: no order in 14+ days | Done, with tests |
 | Installable web app (home screen icon, offline page) | Done |
-| Salesman mode with offline ordering, voice notes, photo of a list | Not in the core build |
+| Salesman mode: my shops, ordering on a shop's behalf, who took each order | Done, with tests |
+| Salesman offline ordering: saved shops, queued orders, sync, change report, shared-phone safety | Done, with tests |
+| Voice notes, photo of a list | Not in the core build |
 
 ## Tech stack
 
@@ -176,6 +188,21 @@ Those seven numbers (`9000000001` to `9000000007`) are fake, so no SMS can reach
 | 9000000005 | Patel Kirana & General | No order in 19 days |
 | 9000000006 | Soni Departmental Store | No order in 27 days |
 | 9000000007 | Tiwari Provision Store | A new shop that has never ordered |
+
+**Salesman** (opens My shops)
+
+1. Go to `/login` (the same screen as retailers).
+2. Enter a salesman number, `9100000001` to `9100000018`, and the same `OTP_TEST_CODE`.
+3. Add those eighteen numbers to `OTP_TEST_NUMBERS` too (see below).
+
+| Number | Salesman | Shops |
+| --- | --- | --- |
+| 9100000001 | Anil Sharma | Gupta, Yadav, Aslam |
+| 9100000002 | Bhupendra Singh | Jain, Patel |
+| 9100000003 | Chetan Rathore | Soni, Tiwari |
+| 9100000004 to 9100000018 | The other fifteen | None yet. Assign shops on the desk's **Salesmen** tab |
+
+To see offline mode: sign in on a production build (`npm run build`, then `npm start`), open **My shops** once with a connection, then switch off the network (or stop the server) and reload. The shops are still there, and an order you take is kept and sent when you reconnect.
 
 **Order desk**
 
@@ -283,7 +310,23 @@ Device details that matter on a real phone: content stays clear of the notch and
 
 ### Installable, and safe offline
 
-The app ships a web app manifest and icons (drawn in code), so it can be added to the home screen, with shortcuts to "Order by message", the cart and orders. A tiny service worker does only two things: it shows a friendly offline page when a page cannot be loaded, and it keeps the app's own static files on the phone so repeat visits are quick. **It never stores pages, API answers or anything about a shop**, so prices, credit and orders always come fresh and a shared phone cannot leak them from a cache. The service worker only runs in production builds, so development is never confused by it.
+The app ships a web app manifest and icons (drawn in code), so it can be added to the home screen, with shortcuts to "Order by message", the cart and orders. A tiny service worker does three small things: it shows a friendly offline page when a page cannot be loaded, it keeps the app's own static files on the phone so repeat visits are quick, and it keeps the **salesman app's empty shell** so that opens with no signal. **It never stores API answers or anything about a shop**: prices, credit and orders come fresh from the server, and a shared phone cannot leak them from a cache. The only page it keeps, `/sales`, contains no shop, price or person. The service worker only runs in production builds, so development is never confused by it.
+
+### Salesman mode and offline ordering
+
+**One design for online and offline.** The salesman app (`/sales`) is a single page that always works from a copy of the data on the phone, and syncs with the server whenever it can. There is no separate "offline version" to get out of step.
+
+1. **Download.** `GET /api/sales/sync` returns the salesman's whole working set: the product list once, and for each of their shops its credit and only the prices that differ from the dealer price. Another salesman's shops are never included. The server decides what a phone may carry. The package goes into the phone's own database (IndexedDB), never into a cache.
+2. **Price on the phone.** The scheme engine is a pure function, so the same code that prices an order on the server prices it on the phone, with no connection. Schemes, free cases, GST and the stock limit all behave the same.
+3. **Queue.** Placing an order saves it on the phone first, with its own unique id. If a signal is there it is sent straight away, otherwise it waits. The id is the order's idempotency key, so a retry after a dropped connection, a second tab, or a crash mid-send can never create two orders.
+4. **Send.** Waiting orders go out oldest first, and the send stops at the first sign the signal or the login is gone. The phone retries when the browser says it is back online, when the app is reopened, and every 15 seconds while it believes it is offline (browsers do not always announce a weak signal coming back).
+5. **The server decides.** Each order is checked again on the server: the shop must be assigned to that salesman, prices and schemes are recalculated from the database, stock is reserved atomically, and credit is checked (over the limit means on hold, as for any order). The reply includes what was actually charged per line.
+6. **Show what moved.** The phone compares its own numbers with the server's. If the total or any line (price, free cases) differs, the salesman sees which and by how much. A stock shortfall comes back as *Needs your attention*, with the reason.
+7. **Who and when.** The order stores which salesman took it (`placedById`) and the phone's clock time (`capturedAt`) when it was taken offline. The phone's clock is never trusted for anything else: a time in the future is clamped to now, and one older than 30 days is ignored.
+
+**Shared phone.** Everything on the phone is keyed to the salesman's id and filtered by it. Signing out deletes the shops, prices, stock and credit, and every cart. Orders not yet sent stay, because they are the salesman's work. Another person who signs in on the same phone sees only their own data (checked in a real browser), and the server only accepts those orders from that salesman. If the salesman signs out with no signal, the login cookie cannot be cleared yet, so the app removes the data at once and finishes the sign-out when the signal returns.
+
+**Limits, stated plainly.** The first sign-in needs a connection (the SMS code), and so does the first download. Prices are only as fresh as the last sync, and the app says how old they are (and warns after 24 hours). Credit shown on the phone counts the salesman's own unsent orders but cannot know about other orders placed in the meantime, which is why the server's check is the real one.
 
 ### The sales dashboard
 

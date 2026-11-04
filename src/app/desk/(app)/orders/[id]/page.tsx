@@ -26,7 +26,8 @@ export default async function DeskOrderPage(props: PageProps<"/desk/orders/[id]"
   const order = await db.order.findUnique({
     where: { id },
     include: {
-      retailer: true,
+      retailer: { include: { salesman: { select: { name: true } } } },
+      placedBy: { select: { name: true } },
       lines: { include: { sku: true }, orderBy: { sku: { name: "asc" } } },
       events: { orderBy: { createdAt: "asc" } },
     },
@@ -62,7 +63,20 @@ export default async function DeskOrderPage(props: PageProps<"/desk/orders/[id]"
           </span>
         )}
       </div>
-      <p className="mt-1 text-sm text-muted">Placed {formatDateTimeLong(order.createdAt)}</p>
+      <p className="mt-1 text-sm text-muted">
+        {order.placedBy ? (
+          <>
+            Taken by salesman <span className="font-medium text-ink">{order.placedBy.name}</span> for the shop.{" "}
+          </>
+        ) : null}
+        Received {formatDateTimeLong(order.createdAt)}
+        {order.capturedAt && Math.abs(order.createdAt.getTime() - order.capturedAt.getTime()) > 10 * 60_000
+          ? `, taken offline at ${formatDateTimeLong(order.capturedAt)}`
+          : ""}
+      </p>
+      {order.retailer.salesman && !order.placedBy && (
+        <p className="text-sm text-muted">Shop&apos;s salesman: {order.retailer.salesman.name}</p>
+      )}
 
       {revised && (
         <p className="mt-4 rounded-xl bg-accent-soft px-4 py-3 text-sm text-accent-strong">

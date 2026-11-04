@@ -25,6 +25,24 @@ export async function requireRetailer() {
   return { user, retailer: user.retailer };
 }
 
+export async function requireSalesman() {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "SALESMAN") redirect("/login");
+  return user;
+}
+
+/**
+ * A salesman may see and order for a shop only when the desk has assigned it
+ * to them. Everything that touches a shop on a salesman's behalf goes through here.
+ */
+export async function salesmanOwnsShop(salesmanId: string, retailerId: string) {
+  const shop = await db.retailer.findFirst({
+    where: { id: retailerId, salesmanId },
+    select: { id: true },
+  });
+  return shop !== null;
+}
+
 export async function requireDesk() {
   const user = await getCurrentUser();
   if (!user || user.role !== "DESK") redirect("/desk/login");

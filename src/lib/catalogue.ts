@@ -24,12 +24,7 @@ export async function loadCatalogue(
   const override = new Map(overrides.map((o) => [o.skuId, o.pricePaise]));
 
   return skus.map((s) => {
-    // Every live scheme, in a fixed order. The engine picks the best one per quantity.
-    const schemes = s.schemes
-      .map(toRule)
-      .filter((r): r is SchemeRule => r !== null && isSchemeLive(r, now))
-      .sort(compareSchemes)
-      .map((r) => ({ ...r, validFrom: null, validUntil: null }));
+    const schemes = liveSchemes(s.schemes, now);
     const unitPricePaise = override.get(s.id) ?? s.pricePaise;
     return {
       id: s.id,
@@ -45,6 +40,15 @@ export async function loadCatalogue(
       schemes,
     };
   });
+}
+
+/** Every live scheme of a product, in a fixed order and without dates. The engine picks the best one per quantity. */
+export function liveSchemes(rows: SchemeRow[], now: Date): SchemeRule[] {
+  return rows
+    .map(toRule)
+    .filter((r): r is SchemeRule => r !== null && isSchemeLive(r, now))
+    .sort(compareSchemes)
+    .map((r) => ({ ...r, validFrom: null, validUntil: null }));
 }
 
 type SchemeRow = {

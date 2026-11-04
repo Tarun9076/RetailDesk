@@ -23,11 +23,8 @@ export async function requestOtp(phone: string, ip: string): Promise<RequestResu
   const byIp = await consume(`otp:ip:${ip}`, 10, WINDOW);
   if (!byIp.allowed) return { status: "rate_limited", retryAfterSec: byIp.retryAfterSec };
 
-  const retailerUser = await db.user.findFirst({
-    where: { role: "RETAILER", retailer: { phone } },
-    select: { id: true },
-  });
-  if (!retailerUser) return { status: "sent" };
+  const account = await findOtpAccount(phone);
+  if (!account) return { status: "sent" };
 
   const last = await db.otpChallenge.findFirst({
     where: { phone },
@@ -69,8 +66,25 @@ export async function requestOtp(phone: string, ip: string): Promise<RequestResu
   return { status: "sent" };
 }
 
+/** A shop owner (by the shop's phone) or a salesman (by their own phone). */
+async function findOtpAccount(phone: string) {
+  const user = await db.user.findFirst({
+    where: {
+      OR: [
+        { role: "RETAILER", retailer: { phone } },
+        { role: "SALESMAN", phone },
+      ],
+    },
+    select: { id: true, role: true, retailerId: true },
+  });
+  if (!user) return null;
+  if (user.role === "SALESMAN") return { userId: user.id, role: "SALESMAN" as const, retailerId: null };
+  if (!user.retailerId) return null;
+  return { userId: user.id, role: "RETAILER" as const, retailerId: user.retailerId };
+}
+
 export type VerifyResult =
-  | { ok: true; userId: string; retailerId: string }
+  | { ok: true; userId: string; role: "RETAILER" | "SALESMAN"; retailerId: string | null }
   | { ok: false; reason: "invalid" | "rate_limited"; retryAfterSec?: number };
 
 /** Every failure is reported as "invalid" so callers cannot tell why. */
@@ -102,10 +116,7 @@ export async function verifyOtp(phone: string, code: string, ip: string): Promis
   });
   if (claimed.count !== 1) return { ok: false, reason: "invalid" };
 
-  const user = await db.user.findFirst({
-    where: { role: "RETAILER", retailer: { phone } },
-    select: { id: true, retailerId: true },
-  });
-  if (!user?.retailerId) return { ok: false, reason: "invalid" };
-  return { ok: true, userId: user.id, retailerId: user.retailerId };
+  const account = await findOtpAccount(phone);
+  if (!account) return { ok: false, reason: "invalid" };
+  return { ok: true, ...account };
 }

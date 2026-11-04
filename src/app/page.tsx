@@ -4,5 +4,5 @@ import { getCurrentUser } from "@/lib/auth/dal";
 export default async function Home() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  redirect(user.role === "DESK" ? "/desk" : "/catalogue");
+  redirect(user.role === "DESK" ? "/desk" : user.role === "SALESMAN" ? "/sales" : "/catalogue");
 }

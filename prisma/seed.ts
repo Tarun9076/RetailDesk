@@ -82,6 +82,21 @@ const RETAILERS: RetailerSeed[] = [
   { name: "Rajesh Tiwari", shopName: "Tiwari Provision Store", phone: "+919000000007", city: "Jabalpur - Adhartal", creditLimit: 50_000, outstanding: 0, lastOrderDaysAgo: 0, orders: 0 },
 ];
 
+// The distributor's 18 salesmen. Invented names; phones are demo numbers that accept the test code.
+const SALESMEN = [
+  "Anil Sharma", "Bhupendra Singh", "Chetan Rathore", "Deepak Mishra", "Faizan Khan", "Gaurav Dubey",
+  "Harish Vishwakarma", "Imran Qureshi", "Jitendra Patel", "Kamlesh Tiwari", "Lokesh Jain", "Manoj Yadav",
+  "Nitin Soni", "Omkar Thakur", "Pradeep Rajak", "Rakesh Kushwaha", "Sandeep Chourasia", "Tarun Pandey",
+];
+const salesmanPhone = (n: number) => `+9191000000${String(n + 1).padStart(2, "0")}`;
+
+// Which salesman visits which shop (index into SALESMEN). The rest are assigned by the desk later.
+const SHOP_SALESMAN: Record<string, number> = {
+  "+919000000001": 0, "+919000000002": 0, "+919000000003": 0,
+  "+919000000004": 1, "+919000000005": 1,
+  "+919000000006": 2, "+919000000007": 2,
+};
+
 const OPEN_ORDERS: Record<string, number> = {
   "+919000000001": 2,
   "+919000000003": 1,
@@ -127,10 +142,17 @@ async function main() {
     },
   });
 
+  const salesmen: { id: string }[] = [];
+  for (let i = 0; i < SALESMEN.length; i++) {
+    salesmen.push(await db.user.create({ data: { role: "SALESMAN", name: SALESMEN[i], phone: salesmanPhone(i) } }));
+  }
+
   let orderNo = 1;
   for (const r of RETAILERS) {
+    const salesmanIdx = SHOP_SALESMAN[r.phone];
     const retailer = await db.retailer.create({
       data: {
+        salesmanId: salesmanIdx === undefined ? null : salesmen[salesmanIdx].id,
         name: r.name, shopName: r.shopName, phone: r.phone, city: r.city,
         creditLimitPaise: rupees(r.creditLimit), outstandingPaise: rupees(r.outstanding),
         tallyLedgerName: r.shopName,
@@ -183,6 +205,8 @@ async function main() {
         data: {
           number: `RD-${String(orderNo++).padStart(6, "0")}`,
           retailerId: retailer.id, status, source: viaAi ? "AI_TEXT" : "CATALOGUE",
+          // A third of a salesman's shops' catalogue orders were taken by the salesman on the visit.
+          placedById: salesmanIdx !== undefined && !viaAi && i % 3 === 1 ? salesmen[salesmanIdx].id : null,
           rawMessage: viaAi ? "bhaiya " + priced.lines.map((l) => wrote(l.skuId, l.qtyCases)).join(", ") : null,
           subtotalPaise: priced.subtotalPaise, discountPaise: priced.discountPaise,
           gstPaise: priced.gstPaise, totalPaise: priced.totalPaise,
@@ -236,7 +260,7 @@ async function main() {
     },
   });
 
-  console.log(`Seeded ${SKUS.length} SKUs, ${RETAILERS.length} retailers, ${orderNo - 1} orders.`);
+  console.log(`Seeded ${SKUS.length} SKUs, ${RETAILERS.length} retailers, ${SALESMEN.length} salesmen, ${orderNo - 1} orders.`);
 }
 
 main()

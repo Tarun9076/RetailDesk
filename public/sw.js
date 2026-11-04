@@ -1,18 +1,21 @@
 /*
- * RetailDesk service worker. It does two small things:
+ * RetailDesk service worker. It does three small things:
  *   1. shows a friendly offline page when a page cannot be loaded
- *   2. keeps the app's own static files (fonts, scripts, icons) on the phone,
+ *   2. keeps the app's own static files (scripts, styles, icons) on the phone,
  *      so repeat visits on slow 3G are fast
+ *   3. keeps the salesman app's shell (/sales) so it opens with no signal
  *
- * It never stores pages, API answers or anything about a shop: prices, credit
- * and orders always come fresh from the server, and a shared phone cannot
- * leak them from a cache.
+ * It never stores API answers or anything about a shop: prices, credit and
+ * orders always come fresh from the server. The /sales shell is the one page
+ * it keeps, and that page contains no shop, price or person: the salesman's
+ * data lives in the app's own on-phone database, deleted at sign out.
  */
-const VERSION = "v2";
+const VERSION = "v3";
 const CACHE = `retaildesk-static-${VERSION}`;
 // A plain HTML file, not a Next.js page: it is shown under any address, and a
 // framework page would try to correct the address mismatch and reload in a loop.
 const OFFLINE_URL = "/offline.html";
+const SHELL_URL = "/sales";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -32,6 +35,29 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+// The app asks us to keep the files it has just loaded, because the very
+// first visit happens before this worker is in charge of the page.
+self.addEventListener("message", (event) => {
+  const data = event.data;
+  if (!data || data.type !== "WARM" || !Array.isArray(data.urls)) return;
+  event.waitUntil(
+    caches.open(CACHE).then((cache) =>
+      Promise.all(
+        data.urls
+          .filter((u) => typeof u === "string")
+          .map((u) => {
+            const url = new URL(u, self.location.origin);
+            if (url.origin !== self.location.origin || !url.pathname.startsWith("/_next/static/")) return null;
+            return cache
+              .match(url.href)
+              .then((hit) => hit || fetch(url.href).then((res) => (res.ok ? cache.put(url.href, res) : undefined)))
+              .catch(() => undefined);
+          }),
+      ),
+    ),
+  );
+});
+
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
@@ -40,9 +66,25 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith("/api/")) return; // never touch the API
 
-  // A page that cannot load: the network answer when there is one, else the offline page.
   if (req.mode === "navigate") {
-    event.respondWith(fetch(req).catch(() => caches.match(OFFLINE_URL)));
+    const isShell = url.pathname === SHELL_URL;
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          // Keep the shell only when it really is the page (not a redirect to sign-in).
+          if (isShell && res.ok && !res.redirected) {
+            const copy = res.clone();
+            caches.open(CACHE).then((cache) => cache.put(SHELL_URL, copy));
+          }
+          return res;
+        })
+        .catch(() =>
+          // The installed app opens at "/": on a phone that has the shell, that means the salesman app.
+          (isShell || url.pathname === "/" ? caches.match(SHELL_URL) : Promise.resolve(undefined)).then(
+            (hit) => hit || caches.match(OFFLINE_URL),
+          ),
+        ),
+    );
     return;
   }
 

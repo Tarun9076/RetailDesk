@@ -12,6 +12,7 @@ datasource db {
 enum Role {
   RETAILER
   DESK
+  SALESMAN
 }
 
 enum SchemeType {
@@ -47,9 +48,11 @@ model Retailer {
   creditLimitPaise Int
   outstandingPaise Int      @default(0)
   tallyLedgerName  String?
+  salesmanId       String? // the salesman who visits this shop; null = not assigned yet
   createdAt        DateTime @default(now())
 
-  users    User[]
+  salesman User?  @relation("SalesmanShops", fields: [salesmanId], references: [id], onDelete: SetNull)
+  users    User[] @relation("RetailerLogins")
   prices   RetailerPrice[]
   orders   Order[]
   aliases  Alias[]
@@ -62,9 +65,13 @@ model User {
   name         String
   email        String?   @unique // desk login
   passwordHash String?
+  phone        String?   @unique // salesman login (E.164); retailers log in with Retailer.phone
   retailerId   String?
-  retailer     Retailer? @relation(fields: [retailerId], references: [id])
+  retailer     Retailer? @relation("RetailerLogins", fields: [retailerId], references: [id])
   createdAt    DateTime  @default(now())
+
+  shops        Retailer[] @relation("SalesmanShops") // salesman: the shops assigned to them
+  placedOrders Order[]    @relation("PlacedBy") // orders this person entered for a shop
 }
 
 model Sku {
@@ -126,16 +133,20 @@ model Order {
   holdReason    String?
   note          String?
   rawMessage    String? // original message when captured by AI
+  placedById    String? // set when a salesman entered the order on the shop's behalf
+  capturedAt    DateTime? // when it was taken, if the phone was offline and sent it later
   createdAt     DateTime    @default(now())
   confirmedAt   DateTime?
   exportedAt    DateTime?
 
+  placedBy User?        @relation("PlacedBy", fields: [placedById], references: [id], onDelete: SetNull)
   retailer Retailer     @relation(fields: [retailerId], references: [id])
   lines    OrderLine[]
   events   OrderEvent[]
 
   @@index([status, createdAt])
   @@index([retailerId, createdAt])
+  @@index([placedById, createdAt])
 }
 
 // Who did what to an order, and when. Never edited after it is written.

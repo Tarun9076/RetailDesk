@@ -7,9 +7,18 @@ import { buildOrder, type RequestedLine } from "./build";
 import { checkCredit } from "./credit";
 import { getCreditPosition } from "./exposure";
 import type { LineIssue } from "@/lib/pricing/types";
+import type { PlacedLine } from "./place-types";
 
 export type PlaceResult =
-  | { ok: true; orderId: string; number: string; status: "PLACED" | "ON_HOLD"; duplicate: boolean }
+  | {
+      ok: true;
+      orderId: string;
+      number: string;
+      status: "PLACED" | "ON_HOLD";
+      duplicate: boolean;
+      totalPaise: number;
+      lines: PlacedLine[];
+    }
   | { ok: false; reason: "empty" | "unknown_sku" }
   | { ok: false; reason: "stock"; issues: { skuId: string; issue: LineIssue }[] };
 
@@ -29,6 +38,10 @@ export async function placeOrder(input: {
   idempotencyKey: string;
   /** Set when the cart came from a reviewed AI capture. */
   captureId?: string;
+  /** Set when a salesman entered the order for the shop. */
+  placedById?: string;
+  /** When a salesman's phone took the order, if it was offline and sent it later. */
+  capturedAt?: Date;
 }): Promise<PlaceResult> {
   // Scoped per retailer, so one shop's key can never collide with or reveal another's.
   const key = `${input.retailerId}:${input.idempotencyKey}`;
@@ -69,6 +82,8 @@ export async function placeOrder(input: {
             source: capture ? "AI_TEXT" : "CATALOGUE",
             holdReason: credit.reason,
             note: input.note?.trim() || null,
+            placedById: input.placedById ?? null,
+            capturedAt: input.capturedAt ?? null,
             rawMessage: capture?.rawText ?? null,
             subtotalPaise: priced.subtotalPaise,
             discountPaise: priced.discountPaise,
@@ -99,7 +114,20 @@ export async function placeOrder(input: {
         }
         return created;
       });
-      return { ok: true, orderId: order.id, number: order.number, status, duplicate: false };
+      return {
+        ok: true,
+        orderId: order.id,
+        number: order.number,
+        status,
+        duplicate: false,
+        totalPaise: priced.totalPaise,
+        lines: priced.lines.map((l) => ({
+          skuId: l.skuId,
+          qtyCases: l.qtyCases,
+          freeCases: l.freeCases,
+          totalPaise: l.totalPaise,
+        })),
+      };
     } catch (e) {
       if (e instanceof StockRace) {
         const fresh = buildOrder(await loadCatalogue(input.retailerId), input.lines);
@@ -120,7 +148,7 @@ export async function placeOrder(input: {
 }
 
 async function findByKey(key: string): Promise<PlaceResult | null> {
-  const o = await db.order.findUnique({ where: { idempotencyKey: key } });
+  const o = await db.order.findUnique({ where: { idempotencyKey: key }, include: { lines: true } });
   if (!o) return null;
   return {
     ok: true,
@@ -128,5 +156,12 @@ async function findByKey(key: string): Promise<PlaceResult | null> {
     number: o.number,
     status: o.status === "ON_HOLD" ? "ON_HOLD" : "PLACED",
     duplicate: true,
+    totalPaise: o.totalPaise,
+    lines: o.lines.map((l) => ({
+      skuId: l.skuId,
+      qtyCases: l.qtyCases,
+      freeCases: l.freeCases,
+      totalPaise: l.grossPaise - l.discountPaise + l.gstPaise,
+    })),
   };
 }

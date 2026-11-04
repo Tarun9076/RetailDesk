@@ -24,6 +24,6 @@ export async function POST(req: Request) {
     return json({ error: "invalid_code" }, 401);
   }
 
-  await createSession({ sub: result.userId, role: "RETAILER", retailerId: result.retailerId });
-  return json({ ok: true, redirect: "/catalogue" });
+  await createSession({ sub: result.userId, role: result.role, retailerId: result.retailerId });
+  return json({ ok: true, redirect: result.role === "SALESMAN" ? "/sales" : "/catalogue" });
 }

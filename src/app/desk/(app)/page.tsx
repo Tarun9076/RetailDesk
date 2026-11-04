@@ -1,5 +1,6 @@
 import { Inbox } from "lucide-react";
 import Link from "next/link";
+import { AutoRefresh } from "@/components/desk/auto-refresh";
 import { DeskStatus } from "@/components/desk/desk-status";
 import { requireDesk } from "@/lib/auth/dal";
 import { db } from "@/lib/db";
@@ -33,16 +34,20 @@ export default async function DeskQueue(props: PageProps<"/desk">) {
       where: { status: { in: [...tab.statuses] } },
       include: { retailer: { select: { shopName: true, city: true } }, _count: { select: { lines: true } } },
       // Holds first (ON_HOLD is declared after PLACED, so descending puts it on top):
-      // they are the ones blocking a shop's order. Then oldest first.
+      // they are the ones blocking a shop's order. Then oldest first, so the queue is worked in order;
+      // anything from the last hour carries a "New" tag so it is easy to spot at the bottom.
       orderBy: tab.key === "attention" ? [{ status: "desc" }, { createdAt: "asc" }] : { createdAt: "desc" },
       take: 100,
     }),
   ]);
+  const now = new Date();
+  const isNew = (d: Date) => now.getTime() - d.getTime() < 60 * 60_000;
   const countOf = (statuses: readonly string[]) =>
     counts.filter((c) => statuses.includes(c.status)).reduce((s, c) => s + c._count, 0);
 
   return (
     <div>
+      <AutoRefresh />
       <h1 className="text-2xl font-semibold tracking-tight">Orders</h1>
 
       <div className="no-scrollbar mt-4 flex gap-2 overflow-x-auto pb-1" role="tablist">
@@ -105,6 +110,9 @@ export default async function DeskQueue(props: PageProps<"/desk">) {
                   </span>
                   <span className="flex flex-wrap items-center gap-2">
                     <DeskStatus status={o.status} />
+                    {isNew(o.createdAt) && (
+                      <span className="rounded-full bg-accent px-2.5 py-1 text-xs font-semibold text-white">New</span>
+                    )}
                     {o.source === "AI_TEXT" && (
                       <span className="rounded-full bg-violet-50 px-2.5 py-1 text-xs font-medium text-violet-800">
                         AI captured

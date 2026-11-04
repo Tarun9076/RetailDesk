@@ -43,6 +43,13 @@ const en = {
     deskWelcome: "Signed in as {name}",
   },
   nav: { catalogue: "Catalogue", capture: "Order by message", orders: "Orders" },
+  install: {
+    title: "Install RetailDesk",
+    body: "Open it from your home screen, like any other app.",
+    button: "Install",
+    later: "Not now",
+    ios: "On iPhone: tap the Share button, then Add to Home Screen.",
+  },
   capture: {
     title: "Order by message",
     intro: "Paste your WhatsApp list or type it. We turn it into an order for you to check. Nothing is ordered until you confirm.",
@@ -200,6 +207,13 @@ const hi: Dict = {
     deskWelcome: "{name} के रूप में साइन इन",
   },
   nav: { catalogue: "कैटलॉग", capture: "मैसेज से ऑर्डर", orders: "ऑर्डर" },
+  install: {
+    title: "RetailDesk इंस्टॉल करें",
+    body: "इसे होम स्क्रीन से खोलें, किसी भी दूसरे ऐप की तरह।",
+    button: "इंस्टॉल करें",
+    later: "अभी नहीं",
+    ios: "iPhone पर: Share बटन दबाएँ, फिर Add to Home Screen चुनें।",
+  },
   capture: {
     title: "मैसेज से ऑर्डर",
     intro: "अपनी WhatsApp लिस्ट यहाँ चिपकाएँ या लिखें। हम उसे ऑर्डर बना देंगे, आप जाँच लें। आपके पक्का करने तक कुछ ऑर्डर नहीं होगा।",

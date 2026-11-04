@@ -67,7 +67,7 @@ RetailDesk lets shops see the truth up front (stock, price, scheme, credit) and 
 
 - Sign in with email and password (with an eye button to check what you typed). Only desk staff can enter the desk area. The desk uses the **whole screen** on a big monitor.
 - **Sales dashboard:** one headline number (net sales) with change against the period before, tiles for orders, average order, GST, scheme discounts, cases and what is waiting, a **sales-per-day chart** (hover for any day, or view it as a table), the **top products and shops**, and how many orders arrive as a pasted message. Choose today, 7, 30 or 90 days.
-- **Order queue** with three tabs: needs attention, ready to export, and done. Credit holds always sit at the top. On a wide screen it is a proper table.
+- **Order queue** with three tabs: needs attention, ready to export, and done. The newest order is always at the top, with a **New** tag for the first hour, and the list refreshes itself every 30 seconds. Credit holds show an amber reason beside the status. On a wide screen it is a proper table.
 - **Order detail** with every line, scheme discounts, the shop's credit standing (limit, balance, open orders, what is left), and a history of who did what.
 - **AI orders** are marked, and show the shop's original message plus the words they wrote for each line with a confidence label. The desk can **change a line's product**: the order is priced again, and the app remembers the fix for that shop.
 - **Decisions:** confirm an order, release a credit hold (your name is recorded), or cancel with a required reason. Cancelling puts the stock back.

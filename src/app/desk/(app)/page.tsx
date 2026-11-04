@@ -33,10 +33,9 @@ export default async function DeskQueue(props: PageProps<"/desk">) {
     db.order.findMany({
       where: { status: { in: [...tab.statuses] } },
       include: { retailer: { select: { shopName: true, city: true } }, _count: { select: { lines: true } } },
-      // Holds first (ON_HOLD is declared after PLACED, so descending puts it on top):
-      // they are the ones blocking a shop's order. Then oldest first, so the queue is worked in order;
-      // anything from the last hour carries a "New" tag so it is easy to spot at the bottom.
-      orderBy: tab.key === "attention" ? [{ status: "desc" }, { createdAt: "asc" }] : { createdAt: "desc" },
+      // Newest first on every tab, so the order that just arrived is the first thing the desk sees.
+      // Credit holds stay easy to find: they carry an amber reason, and the tab count includes them.
+      orderBy: { createdAt: "desc" },
       take: 100,
     }),
   ]);

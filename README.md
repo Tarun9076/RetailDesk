@@ -161,7 +161,7 @@ npm run db:deploy
 npm run db:seed
 ```
 
-The seed adds 12 products, 6 shops, a desk user and about 45 past orders. You can run it again any time to reset the demo data.
+The seed adds 12 products, 7 shops, 18 salesmen, a desk user and about 105 past orders. You can run it again any time to reset the demo data.
 
 ### 5. Start the app
 

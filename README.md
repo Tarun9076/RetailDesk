@@ -52,16 +52,17 @@ RetailDesk lets shops see the truth up front (stock, price, scheme, credit) and 
 - **Order by message:** paste a WhatsApp-style list in English, Hindi or Hinglish. The app reads it into lines, and the shopkeeper checks each one before anything is ordered (see [AI order capture](#ai-order-capture)).
 - Place the order, view past orders, and **repeat an old order in one tap**.
 - Use everything in **English or Hindi**.
-- **Install it** on the phone's home screen like an app. If there is no signal, a friendly offline page appears and the cart stays safe on the phone.
+- **Download the app:** a **Download app** button is always in the header (and on the sign-in screens) until the app is installed. Where the browser allows it, one tap opens its own install dialog. Otherwise a short sheet shows the exact steps for that phone. If there is no signal, a friendly offline page appears and the cart stays safe on the phone.
 
 **For the office (order desk)**
 
-- Sign in with email and password. Only desk staff can enter the desk area.
-- **Order queue** with three tabs: needs attention, ready for Tally, and done. Credit holds always sit at the top.
+- Sign in with email and password (with an eye button to check what you typed). Only desk staff can enter the desk area. The desk uses the **whole screen** on a big monitor.
+- **Sales dashboard:** one headline number (net sales) with change against the period before, tiles for orders, average order, GST, scheme discounts, cases and what is waiting, a **sales-per-day chart** (hover for any day, or view it as a table), the **top products and shops**, and how many orders arrive as a pasted message. Choose today, 7, 30 or 90 days.
+- **Order queue** with three tabs: needs attention, ready to export, and done. Credit holds always sit at the top. On a wide screen it is a proper table.
 - **Order detail** with every line, scheme discounts, the shop's credit standing (limit, balance, open orders, what is left), and a history of who did what.
 - **AI orders** are marked, and show the shop's original message plus the words they wrote for each line with a confidence label. The desk can **change a line's product**: the order is priced again, and the app remembers the fix for that shop.
 - **Decisions:** confirm an order, release a credit hold (your name is recorded), or cancel with a required reason. Cancelling puts the stock back.
-- **Tally export:** pick confirmed orders and download one Tally import file with a Sales voucher per order. Re-download an old file any time without changing anything.
+- **Excel export:** pick confirmed orders and download an **Excel sales register** (`.xlsx`): one row per order, the line items behind it, and a GST summary by rate, with live totals. A Tally XML import file is still available as a secondary option. Re-download an old file any time without changing anything.
 - **Van loading list:** what to pick from the godown, and what drops at each shop. Printable.
 - **Shops dashboard:** which shops have gone quiet (no order in 14+ days, or 30+), with last order date, 90-day orders, credit left, and one-tap **Call** and **WhatsApp** buttons. Shops that never ordered are listed too.
 
@@ -76,7 +77,9 @@ RetailDesk lets shops see the truth up front (stock, price, scheme, credit) and 
 | Cart, credit check, place order, order history, repeat order | Done |
 | English and Hindi | Done |
 | Order desk: queue, order detail, confirm, release credit hold, cancel | Done |
-| Tally export (XML) and van loading list | Done, with tests |
+| Excel sales register export (and Tally XML), van loading list | Done, with tests |
+| Sales dashboard for the desk, with charts | Done, with tests |
+| Full-screen desk layout, show-password eye, Download app button | Done |
 | AI order capture from a pasted text message, with review and learning | Done, with tests |
 | Shops dashboard: no order in 14+ days | Done, with tests |
 | Installable web app (home screen icon, offline page) | Done |
@@ -92,7 +95,9 @@ RetailDesk lets shops see the truth up front (stock, price, scheme, credit) and 
 | ORM | Prisma 7 | Typed queries and tracked migrations |
 | Login | Own implementation with `jose` (session tokens) and `argon2` (passwords) | Full control over OTP rules and rate limits |
 | SMS | Twilio, behind a small interface | Swap in another provider without touching the rest |
-| AI | Google Gemini | Reads messy order text (coming soon) |
+| AI | Google Gemini | Reads messy order text into lines; the app's own code picks the products |
+| Excel | ExcelJS | Builds the `.xlsx` sales register on the server |
+| Charts | Hand-built HTML (no chart library) | Zero extra download on slow phones, full control of hover and keyboard use |
 | Validation | Zod | Every request body is checked |
 | Tests | Vitest | Fast unit tests for the important logic |
 
@@ -266,11 +271,19 @@ Other choices that help: product pictures are drawn in code instead of downloade
 
 The app ships a web app manifest and icons (drawn in code), so it can be added to the home screen, with shortcuts to "Order by message", the cart and orders. A tiny service worker does only two things: it shows a friendly offline page when a page cannot be loaded, and it keeps the app's own static files on the phone so repeat visits are quick. **It never stores pages, API answers or anything about a shop**, so prices, credit and orders always come fresh and a shared phone cannot leak them from a cache. The service worker only runs in production builds, so development is never confused by it.
 
-### The desk and Tally
+### The sales dashboard
+
+- **What counts as a sale:** orders the desk has confirmed or exported, by the day the shop ordered (in Indian time), **after scheme discounts and before GST**. Orders still waiting are shown separately, and cancelled orders count for nothing.
+- **Fast with many orders:** the totals are added up in the database in a few grouped queries instead of loading every order, so it stays quick at hundreds of orders a day. I checked the database totals against a separate recalculation in code, for every date range, day by day.
+- **Honest comparisons:** each figure is compared with the same number of days just before. If there was nothing to compare with, it says so instead of showing an infinite percentage. Direction is always shown with an arrow and a sign, never colour alone.
+- **Charts built for the job:** thin bars, clean round-number axes in lakhs and crores, a hover tooltip that also works with arrow keys, and a "view as table" button. The two chart colours were run through a colour-blind and contrast validator. The brand green was too dark for chart data, so charts use a brighter green from the same family.
+
+### The desk, Excel and Tally
 
 - **Order life:** `To check` or `On hold` becomes `Confirmed`, then `Exported`. An order can be `Cancelled` until it is exported. The allowed moves live in one small, tested file (`src/lib/orders/transitions.ts`).
 - **No double clicks:** a decision only goes through if the order is still in the state the desk saw, so two people clicking at once cannot both win.
 - **Exporting** marks the orders as exported and raises each shop's account balance by the order total. That mirrors what Tally will show, so a shop's credit stays right after its order leaves the queue. Exporting the same order twice never counts it twice.
+- **The Excel register** is built in `src/lib/tally/workbook.ts`. Money is stored as real numbers (not text), totals are live `SUM` formulas, dates are the Indian calendar day, and the sheets are tested to add up to each other and to agree with the Tally file for the same order.
 - **The Tally file** is built by plain code in `src/lib/tally/voucher.ts` and tested to balance to the paisa: the shop is debited the total, and Sales, CGST and SGST are credited. Free goods appear as zero-value stock lines. Shop names and notes are escaped, so a stray `&` cannot break the file. Ledger names are placeholders the client would confirm.
 
 ### Login
@@ -302,7 +315,8 @@ src/
   lib/
     pricing/           Scheme engine (the core logic)
     orders/            Order building, credit check, placing orders, desk decisions, export
-    tally/             Tally XML builder
+    tally/             Excel register and Tally XML builders
+    sales.ts           Date ranges, chart scales and number formats for the dashboard
     capture/           AI order capture: reader, matcher, learning
     auth/              OTP, sessions, rate limits, SMS sender
     i18n/              English and Hindi text
@@ -332,6 +346,8 @@ Covers the logic where mistakes would cost money or trust:
 - The credit check, including the exact-limit case.
 - Order status rules: which desk actions are allowed from which state.
 - The Tally file: balanced vouchers, free goods, GST split, escaping and Indian dates.
+- The Excel register: it opens as a real workbook, rows add up across sheets, GST splits without losing a paisa, and dates use Indian days.
+- The sales dashboard maths: Indian-day ranges, filling empty days, change versus before, lakh and crore formatting, and round chart axes.
 - The shops dashboard: counting days in Indian time (an evening order is not "yesterday" by UTC), the 14 and 30 day edges, never-ordered shops, and sort order.
 - The message reader: the brief's sample message, Hindi and Devanagari numbers, "1 kilo" versus a quantity, units that are missing, and splitting lines.
 - The matcher: confidence levels, alternatives, pack sizes, typos, learned phrases, and what should and should not be remembered.

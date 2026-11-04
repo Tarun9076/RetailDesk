@@ -35,6 +35,18 @@ html {
   color-scheme: light;
 }
 
+/* Chart colours. The two series hues were run through the dataviz palette validator:
+   lightness band, chroma floor, colour-blind separation (delta E 24) and 3:1 contrast
+   all pass on a white surface. The brand green is too dark for data marks, so charts
+   use this brighter green from the same family. The app is light only. */
+.viz {
+  --viz-1: #0f8a4f;
+  --viz-2: #6250d6;
+  --viz-grid: #e1e0d9;
+  --viz-axis: #c3c2b7;
+  --viz-muted: #898781;
+}
+
 body {
   background: var(--bg);
   color: var(--ink);

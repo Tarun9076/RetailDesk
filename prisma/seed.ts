@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Demo data. Everything here is invented (assumption A8) except the three SKUs
  * and their prices/stock/schemes, which come from the client brief.
  * Re-running wipes and recreates all rows.
@@ -37,7 +37,7 @@ type SkuSeed = {
   nameHi: string;
   brand: string;
   piecesPerCase: number;
-  price: number; // ₹ per piece
+  price: number; // â‚¹ per piece
   gstRateBp: number;
   stockCases: number;
   scheme?: SchemeRule;
@@ -45,39 +45,39 @@ type SkuSeed = {
 
 const SKUS: SkuSeed[] = [
   // From the brief
-  { code: "SKU-BS-075", name: "Glucose biscuit 75 g, case of 96", nameHi: "ग्लूकोज़ बिस्कुट 75 ग्राम", brand: "Annapurna Foods", piecesPerCase: 96, price: 8.1, gstRateBp: 1200, stockCases: 340,
+  { code: "SKU-BS-075", name: "Glucose biscuit 75 g, case of 96", nameHi: "à¤—à¥à¤²à¥‚à¤•à¥‹à¤œà¤¼ à¤¬à¤¿à¤¸à¥à¤•à¥à¤Ÿ 75 à¤—à¥à¤°à¤¾à¤®", brand: "Annapurna Foods", piecesPerCase: 96, price: 8.1, gstRateBp: 1200, stockCases: 340,
     scheme: { type: "FREE_GOODS", buyQty: 10, freeQty: 1, label: "Buy 10 cases get 1 free" } },
-  { code: "SKU-DT-1KG", name: "Detergent powder 1 kg, case of 20", nameHi: "डिटर्जेंट पाउडर 1 किलो", brand: "SafaiPlus", piecesPerCase: 20, price: 101.5, gstRateBp: 1800, stockCases: 85,
+  { code: "SKU-DT-1KG", name: "Detergent powder 1 kg, case of 20", nameHi: "à¤¡à¤¿à¤Ÿà¤°à¥à¤œà¥‡à¤‚à¤Ÿ à¤ªà¤¾à¤‰à¤¡à¤° 1 à¤•à¤¿à¤²à¥‹", brand: "SafaiPlus", piecesPerCase: 20, price: 101.5, gstRateBp: 1800, stockCases: 85,
     scheme: { type: "SLAB_PERCENT", minQty: 5, percentBp: 300, label: "3% off 5 or more cases" } },
-  { code: "SKU-TE-250", name: "Tea leaf 250 g, case of 40", nameHi: "चाय पत्ती 250 ग्राम", brand: "Chaikhana Teas", piecesPerCase: 40, price: 118, gstRateBp: 1200, stockCases: 0 },
+  { code: "SKU-TE-250", name: "Tea leaf 250 g, case of 40", nameHi: "à¤šà¤¾à¤¯ à¤ªà¤¤à¥à¤¤à¥€ 250 à¤—à¥à¤°à¤¾à¤®", brand: "Chaikhana Teas", piecesPerCase: 40, price: 118, gstRateBp: 1200, stockCases: 0 },
   // Invented to make the catalogue realistic
-  { code: "SKU-BS-200", name: "Cream biscuit 200 g, case of 48", nameHi: "क्रीम बिस्कुट 200 ग्राम", brand: "Annapurna Foods", piecesPerCase: 48, price: 30, gstRateBp: 1800, stockCases: 120 },
-  { code: "SKU-GB-150", name: "Glucose biscuit 150 g, case of 48", nameHi: "ग्लूकोज़ बिस्कुट 150 ग्राम", brand: "Annapurna Foods", piecesPerCase: 48, price: 15, gstRateBp: 1200, stockCases: 8 },
-  { code: "SKU-NM-070", name: "Instant noodles 70 g, case of 48", nameHi: "इंस्टेंट नूडल्स 70 ग्राम", brand: "Annapurna Foods", piecesPerCase: 48, price: 12, gstRateBp: 1200, stockCases: 210,
+  { code: "SKU-BS-200", name: "Cream biscuit 200 g, case of 48", nameHi: "à¤•à¥à¤°à¥€à¤® à¤¬à¤¿à¤¸à¥à¤•à¥à¤Ÿ 200 à¤—à¥à¤°à¤¾à¤®", brand: "Annapurna Foods", piecesPerCase: 48, price: 30, gstRateBp: 1800, stockCases: 120 },
+  { code: "SKU-GB-150", name: "Glucose biscuit 150 g, case of 48", nameHi: "à¤—à¥à¤²à¥‚à¤•à¥‹à¤œà¤¼ à¤¬à¤¿à¤¸à¥à¤•à¥à¤Ÿ 150 à¤—à¥à¤°à¤¾à¤®", brand: "Annapurna Foods", piecesPerCase: 48, price: 15, gstRateBp: 1200, stockCases: 8 },
+  { code: "SKU-NM-070", name: "Instant noodles 70 g, case of 48", nameHi: "à¤‡à¤‚à¤¸à¥à¤Ÿà¥‡à¤‚à¤Ÿ à¤¨à¥‚à¤¡à¤²à¥à¤¸ 70 à¤—à¥à¤°à¤¾à¤®", brand: "Annapurna Foods", piecesPerCase: 48, price: 12, gstRateBp: 1200, stockCases: 210,
     scheme: { type: "FREE_GOODS", buyQty: 8, freeQty: 1, label: "Buy 8 cases get 1 free" } },
-  { code: "SKU-SA-1KG", name: "Iodised salt 1 kg, case of 25", nameHi: "आयोडीन नमक 1 किलो", brand: "Annapurna Foods", piecesPerCase: 25, price: 24, gstRateBp: 0, stockCases: 400 },
-  { code: "SKU-TE-100", name: "Tea leaf 100 g, case of 80", nameHi: "चाय पत्ती 100 ग्राम", brand: "Chaikhana Teas", piecesPerCase: 80, price: 48, gstRateBp: 1200, stockCases: 95 },
-  { code: "SKU-DT-500", name: "Detergent powder 500 g, case of 40", nameHi: "डिटर्जेंट पाउडर 500 ग्राम", brand: "SafaiPlus", piecesPerCase: 40, price: 52, gstRateBp: 1800, stockCases: 140,
+  { code: "SKU-SA-1KG", name: "Iodised salt 1 kg, case of 25", nameHi: "à¤†à¤¯à¥‹à¤¡à¥€à¤¨ à¤¨à¤®à¤• 1 à¤•à¤¿à¤²à¥‹", brand: "Annapurna Foods", piecesPerCase: 25, price: 24, gstRateBp: 0, stockCases: 400 },
+  { code: "SKU-TE-100", name: "Tea leaf 100 g, case of 80", nameHi: "à¤šà¤¾à¤¯ à¤ªà¤¤à¥à¤¤à¥€ 100 à¤—à¥à¤°à¤¾à¤®", brand: "Chaikhana Teas", piecesPerCase: 80, price: 48, gstRateBp: 1200, stockCases: 95 },
+  { code: "SKU-DT-500", name: "Detergent powder 500 g, case of 40", nameHi: "à¤¡à¤¿à¤Ÿà¤°à¥à¤œà¥‡à¤‚à¤Ÿ à¤ªà¤¾à¤‰à¤¡à¤° 500 à¤—à¥à¤°à¤¾à¤®", brand: "SafaiPlus", piecesPerCase: 40, price: 52, gstRateBp: 1800, stockCases: 140,
     scheme: { type: "SLAB_PERCENT", minQty: 10, percentBp: 200, label: "2% off 10 or more cases" } },
-  { code: "SKU-DW-500", name: "Dishwash liquid 500 ml, case of 24", nameHi: "डिशवॉश लिक्विड 500 मिली", brand: "SafaiPlus", piecesPerCase: 24, price: 95, gstRateBp: 1800, stockCases: 60 },
-  { code: "SKU-FC-1L", name: "Floor cleaner 1 l, case of 12", nameHi: "फ़र्श क्लीनर 1 लीटर", brand: "SafaiPlus", piecesPerCase: 12, price: 140, gstRateBp: 1800, stockCases: 18 },
-  { code: "SKU-SP-100", name: "Bath soap 100 g, case of 72", nameHi: "नहाने का साबुन 100 ग्राम", brand: "Nirmal Care", piecesPerCase: 72, price: 34, gstRateBp: 1800, stockCases: 300,
+  { code: "SKU-DW-500", name: "Dishwash liquid 500 ml, case of 24", nameHi: "à¤¡à¤¿à¤¶à¤µà¥‰à¤¶ à¤²à¤¿à¤•à¥à¤µà¤¿à¤¡ 500 à¤®à¤¿à¤²à¥€", brand: "SafaiPlus", piecesPerCase: 24, price: 95, gstRateBp: 1800, stockCases: 60 },
+  { code: "SKU-FC-1L", name: "Floor cleaner 1 l, case of 12", nameHi: "à¤«à¤¼à¤°à¥à¤¶ à¤•à¥à¤²à¥€à¤¨à¤° 1 à¤²à¥€à¤Ÿà¤°", brand: "SafaiPlus", piecesPerCase: 12, price: 140, gstRateBp: 1800, stockCases: 18 },
+  { code: "SKU-SP-100", name: "Bath soap 100 g, case of 72", nameHi: "à¤¨à¤¹à¤¾à¤¨à¥‡ à¤•à¤¾ à¤¸à¤¾à¤¬à¥à¤¨ 100 à¤—à¥à¤°à¤¾à¤®", brand: "Nirmal Care", piecesPerCase: 72, price: 34, gstRateBp: 1800, stockCases: 300,
     scheme: { type: "SLAB_PERCENT", minQty: 8, percentBp: 400, label: "4% off 8 or more cases" } },
 ];
 
 type RetailerSeed = {
   name: string; shopName: string; phone: string; city: string;
   creditLimit: number; outstanding: number; lastOrderDaysAgo: number; orders: number;
-  priceOverrides?: Record<string, number>; // ₹ per piece
+  priceOverrides?: Record<string, number>; // â‚¹ per piece
 };
 
 const RETAILERS: RetailerSeed[] = [
-  { name: "Ramesh Gupta", shopName: "Gupta General Store", phone: "+919000000001", city: "Jabalpur - Sadar", creditLimit: 150_000, outstanding: 30_000, lastOrderDaysAgo: 2, orders: 9, priceOverrides: { "SKU-BS-075": 7.9 } },
-  { name: "Sunita Yadav", shopName: "Yadav Kirana", phone: "+919000000002", city: "Jabalpur - Napier Town", creditLimit: 80_000, outstanding: 74_000, lastOrderDaysAgo: 1, orders: 7 },
-  { name: "Mohd. Aslam", shopName: "Aslam Provision Store", phone: "+919000000003", city: "Jabalpur - Gohalpur", creditLimit: 100_000, outstanding: 20_000, lastOrderDaysAgo: 4, orders: 8 },
-  { name: "Pooja Jain", shopName: "Jain Super Mart", phone: "+919000000004", city: "Jabalpur - Wright Town", creditLimit: 200_000, outstanding: 40_000, lastOrderDaysAgo: 3, orders: 10, priceOverrides: { "SKU-DT-1KG": 99, "SKU-BS-075": 7.95 } },
-  { name: "Dinesh Patel", shopName: "Patel Kirana & General", phone: "+919000000005", city: "Jabalpur - Ranjhi", creditLimit: 60_000, outstanding: 15_000, lastOrderDaysAgo: 19, orders: 5 },
-  { name: "Kavita Soni", shopName: "Soni Departmental Store", phone: "+919000000006", city: "Jabalpur - Vijay Nagar", creditLimit: 90_000, outstanding: 0, lastOrderDaysAgo: 27, orders: 4 },
+  { name: "Ramesh Gupta", shopName: "Gupta General Store", phone: "+919000000001", city: "Jabalpur - Sadar", creditLimit: 150_000, outstanding: 30_000, lastOrderDaysAgo: 2, orders: 24, priceOverrides: { "SKU-BS-075": 7.9 } },
+  { name: "Sunita Yadav", shopName: "Yadav Kirana", phone: "+919000000002", city: "Jabalpur - Napier Town", creditLimit: 80_000, outstanding: 74_000, lastOrderDaysAgo: 1, orders: 18 },
+  { name: "Mohd. Aslam", shopName: "Aslam Provision Store", phone: "+919000000003", city: "Jabalpur - Gohalpur", creditLimit: 100_000, outstanding: 20_000, lastOrderDaysAgo: 4, orders: 20 },
+  { name: "Pooja Jain", shopName: "Jain Super Mart", phone: "+919000000004", city: "Jabalpur - Wright Town", creditLimit: 200_000, outstanding: 40_000, lastOrderDaysAgo: 3, orders: 26, priceOverrides: { "SKU-DT-1KG": 99, "SKU-BS-075": 7.95 } },
+  { name: "Dinesh Patel", shopName: "Patel Kirana & General", phone: "+919000000005", city: "Jabalpur - Ranjhi", creditLimit: 60_000, outstanding: 15_000, lastOrderDaysAgo: 19, orders: 9 },
+  { name: "Kavita Soni", shopName: "Soni Departmental Store", phone: "+919000000006", city: "Jabalpur - Vijay Nagar", creditLimit: 90_000, outstanding: 0, lastOrderDaysAgo: 27, orders: 6 },
   // A new shop that has signed up but never ordered: the desk should still see it.
   { name: "Rajesh Tiwari", shopName: "Tiwari Provision Store", phone: "+919000000007", city: "Jabalpur - Adhartal", creditLimit: 50_000, outstanding: 0, lastOrderDaysAgo: 0, orders: 0 },
 ];
@@ -172,10 +172,18 @@ async function main() {
       // Only a few recent orders are still waiting for the desk; the rest are billed.
       // Open orders count towards credit used, so this keeps the demo balances sensible.
       const status = isOpen ? "PLACED" : "EXPORTED";
+
+      // About a quarter of orders arrive as a pasted message, the way shops write to the office today.
+      const viaAi = rand() < 0.28;
+      const wrote = (id: string, qtyCases: number) => {
+        const sku = picks.find((p) => p.row.id === id)!.seed;
+        return `${qtyCases} peti ${sku.name.split(",")[0].toLowerCase()}`;
+      };
       await db.order.create({
         data: {
           number: `RD-${String(orderNo++).padStart(6, "0")}`,
-          retailerId: retailer.id, status, source: "CATALOGUE",
+          retailerId: retailer.id, status, source: viaAi ? "AI_TEXT" : "CATALOGUE",
+          rawMessage: viaAi ? "bhaiya " + priced.lines.map((l) => wrote(l.skuId, l.qtyCases)).join(", ") : null,
           subtotalPaise: priced.subtotalPaise, discountPaise: priced.discountPaise,
           gstPaise: priced.gstPaise, totalPaise: priced.totalPaise,
           createdAt,
@@ -187,6 +195,8 @@ async function main() {
               unitPricePaise: unitPriceOf(picks.find((p) => p.row.id === l.skuId)!),
               grossPaise: l.grossPaise, discountPaise: l.discountPaise, gstPaise: l.gstPaise,
               schemeLabel: l.schemeLabel,
+              originalText: viaAi ? wrote(l.skuId, l.qtyCases) : null,
+              confidence: viaAi ? 0.9 : null,
             })),
           },
         },
@@ -232,3 +242,4 @@ async function main() {
 main()
   .catch((e) => { console.error(e); process.exit(1); })
   .finally(() => db.$disconnect());
+

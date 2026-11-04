@@ -4,9 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const TABS = [
+  { href: "/desk/dashboard", label: "Dashboard", match: (p: string) => p.startsWith("/desk/dashboard") },
   { href: "/desk", label: "Orders", match: (p: string) => p === "/desk" || p.startsWith("/desk/orders") },
   { href: "/desk/shops", label: "Shops", match: (p: string) => p.startsWith("/desk/shops") },
-  { href: "/desk/export", label: "Tally export", match: (p: string) => p.startsWith("/desk/export") },
+  { href: "/desk/export", label: "Export", match: (p: string) => p.startsWith("/desk/export") },
   { href: "/desk/loading", label: "Loading list", match: (p: string) => p.startsWith("/desk/loading") },
 ];
 
@@ -14,7 +15,7 @@ export function DeskNav() {
   const pathname = usePathname();
   return (
     <nav aria-label="Desk" className="border-b border-line bg-bg print:hidden">
-      <div className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-4 sm:px-6">
+      <div className="flex w-full gap-1 overflow-x-auto px-4 sm:px-6 lg:px-8">
         {TABS.map((tab) => {
           const active = tab.match(pathname);
           return (

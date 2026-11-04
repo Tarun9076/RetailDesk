@@ -35,4 +35,8 @@
 - A20. A correction is remembered when the shopkeeper (or desk) changes a guess, or picks on a line the app was unsure about. A swap away from an out-of-stock product is treated as a substitution and is not remembered.
 - A21. The desk can change a line's product on an order that is still being checked (to check or on hold). The order is priced again and the credit check re-run. Confirmed, exported and cancelled orders cannot be changed.
 - A22. Confidence is shown as three words (sure, please check, not sure), not a percentage, because the number is not a calibrated probability.
+- A23. "No order in 14 days" is counted in Indian calendar days since the shop's latest order that was not cancelled. Exactly 14 days counts as quiet. Shops that have never ordered are listed separately, at the end.
+- A24. The WhatsApp button only opens a pre-written message in WhatsApp on the desk user's own device. Nothing is sent by the app, because messaging is mocked for this build.
+- A25. No web fonts: the app uses each phone's own system fonts (Roboto/Noto on Android, San Francisco on iPhone, Segoe UI/Nirmala on Windows). Measured on a production build, Noto Sans added about 300 KB to every first load.
+- A26. Offline use is limited to a friendly offline page and cached static files. Prices, credit and orders are never cached on the phone. Salesman offline ordering with sync is not built.
 - A10. Tally export is a Tally Prime sales-voucher XML; the client's real ledger and item names are unknown.

@@ -10,23 +10,24 @@ import { timeAgo } from "@/lib/field/ago";
 import { newQueuedOrder, unsentPaiseFor } from "@/lib/field/queue";
 import { putOrder } from "@/lib/field/store";
 import { catalogueForShop, creditLeftPaise, type FieldShop } from "@/lib/field/types";
+import { fmt } from "@/lib/i18n/dict";
 import { nextBenefitText, schemeText } from "@/lib/i18n/scheme";
 import { formatPaise } from "@/lib/money";
 import { maxOrderableCases } from "@/lib/pricing/engine";
 import { useField } from "./field-context";
 
 export function ShopView({ shopId, showCart }: { shopId: string; showCart: boolean }) {
-  const { snapshot, lang, go } = useField();
+  const { snapshot, lang, go, f } = useField();
   const shop = snapshot.shops.find((s) => s.id === shopId);
   const items = useMemo(() => (shop ? catalogueForShop(snapshot.skus, shop) : []), [snapshot.skus, shop]);
 
   if (!shop) {
     return (
       <div className="py-16 text-center">
-        <p className="text-muted">This shop is not on your list. It may have been reassigned.</p>
+        <p className="text-muted">{f.notOnList}</p>
         <div className="mx-auto mt-6 max-w-xs">
           <Button type="button" onClick={() => go("#/")}>
-            Back to my shops
+            {f.backToShops}
           </Button>
         </div>
       </div>
@@ -42,7 +43,7 @@ export function ShopView({ shopId, showCart }: { shopId: string; showCart: boole
 }
 
 function ShopHeader({ shop }: { shop: FieldShop }) {
-  const { snapshot, queue, go } = useField();
+  const { snapshot, queue, go, f } = useField();
   const left = creditLeftPaise(shop, unsentPaiseFor(queue, shop.id));
   return (
     <div className="mb-4">
@@ -51,7 +52,7 @@ function ShopHeader({ shop }: { shop: FieldShop }) {
         onClick={() => go("#/")}
         className="-ml-2 flex min-h-11 items-center gap-1.5 rounded-xl px-2 text-sm font-medium text-muted hover:bg-surface"
       >
-        <ArrowLeft size={16} aria-hidden /> My shops
+        <ArrowLeft size={16} aria-hidden /> {f.navShops}
       </button>
       <div className="mt-1 flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -62,25 +63,24 @@ function ShopHeader({ shop }: { shop: FieldShop }) {
         </div>
         <a
           href={`tel:${shop.phone}`}
-          aria-label={`Call ${shop.ownerName}`}
+          aria-label={fmt(f.callAria, { name: shop.ownerName })}
           className="flex min-h-12 min-w-12 shrink-0 items-center justify-center rounded-xl border border-line hover:bg-surface"
         >
           <Phone size={18} aria-hidden />
         </a>
       </div>
       <p className="mt-2 text-sm text-muted">
-        Credit left:{" "}
+        {f.creditLeft}{" "}
         <span className={`font-medium ${left <= 0 ? "text-danger" : "text-ink"}`}>{formatPaise(left)}</span>
-        <span className="text-muted"> · prices from {timeAgo(snapshot.syncedAt)}</span>
+        <span className="text-muted"> · {fmt(f.pricesFrom, { ago: timeAgo(snapshot.syncedAt, new Date(), f) })}</span>
       </p>
     </div>
   );
 }
 
 function Browse({ shop }: { shop: FieldShop }) {
-  const { t } = useField();
+  const { t, f, go } = useField();
   const { count, priced } = useCart();
-  const { go } = useField();
   return (
     <>
       <CatalogueView t={t} />
@@ -93,9 +93,7 @@ function Browse({ shop }: { shop: FieldShop }) {
           >
             <span className="flex min-w-0 items-center gap-2 font-medium">
               <ShoppingBag size={20} aria-hidden className="shrink-0" />
-              <span className="truncate">
-                {count} {count === 1 ? "item" : "items"} · Review order
-              </span>
+              <span className="truncate">{fmt(count === 1 ? f.itemOne : f.itemMany, { n: count })}</span>
             </span>
             <span className="ml-3 shrink-0 text-lg font-semibold">{formatPaise(priced.totalPaise)}</span>
           </button>
@@ -106,7 +104,7 @@ function Browse({ shop }: { shop: FieldShop }) {
 }
 
 function FieldCart({ shop }: { shop: FieldShop }) {
-  const { snapshot, queue, lang, go, reloadQueue, syncNow, online } = useField();
+  const { snapshot, queue, lang, f, go, reloadQueue, syncNow, online } = useField();
   const { items, priced, setQty, clear, hydrated } = useCart();
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
@@ -121,10 +119,10 @@ function FieldCart({ shop }: { shop: FieldShop }) {
     return (
       <div className="flex flex-col items-center py-16 text-center">
         <ShoppingBag size={40} aria-hidden className="text-muted" />
-        <p className="mt-4 text-muted">Nothing in this order yet.</p>
+        <p className="mt-4 text-muted">{f.nothingYet}</p>
         <div className="mt-6 w-full max-w-xs">
           <Button type="button" onClick={back}>
-            Add products
+            {f.addProducts}
           </Button>
         </div>
       </div>
@@ -146,6 +144,7 @@ function FieldCart({ shop }: { shop: FieldShop }) {
         lines: priced.lines.map((l) => ({
           skuId: l.skuId,
           name: byId.get(l.skuId)?.name ?? l.skuId,
+          nameHi: byId.get(l.skuId)?.nameHi ?? null,
           qtyCases: l.qtyCases,
         })),
         note,
@@ -158,14 +157,14 @@ function FieldCart({ shop }: { shop: FieldShop }) {
       go("#/orders");
       if (online) void syncNow();
     } catch {
-      setError("Could not save the order on this phone. Free some storage and try again.");
+      setError(f.saveFailed);
       setBusy(false);
     }
   }
 
   return (
     <div className="mx-auto max-w-2xl lg:max-w-none">
-      <h2 className="text-xl font-semibold tracking-tight">Review order</h2>
+      <h2 className="text-xl font-semibold tracking-tight">{f.reviewOrder}</h2>
       <div className="mt-3 lg:grid lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start lg:gap-8">
         <ul className="divide-y divide-line rounded-2xl border border-line">
           {priced.lines.map((line) => {
@@ -178,7 +177,7 @@ function FieldCart({ shop }: { shop: FieldShop }) {
                   <div className="min-w-0">
                     <p className="font-medium leading-snug">{name}</p>
                     <p className="mt-0.5 text-sm text-muted">
-                      {line.qtyCases} {line.qtyCases === 1 ? "case" : "cases"} × {formatPaise(item.casePricePaise)}
+                      {line.qtyCases} {line.qtyCases === 1 ? f.caseOne : f.caseMany} × {formatPaise(item.casePricePaise)}
                     </p>
                   </div>
                   <p className="shrink-0 font-semibold">{formatPaise(line.grossPaise)}</p>
@@ -192,13 +191,13 @@ function FieldCart({ shop }: { shop: FieldShop }) {
                     onClick={() => setQty(line.skuId, 0)}
                     className="flex min-h-12 items-center gap-1.5 rounded-xl px-3 text-sm text-muted hover:bg-surface"
                   >
-                    <Trash2 size={16} aria-hidden /> Remove
+                    <Trash2 size={16} aria-hidden /> {f.remove}
                   </button>
                 </div>
                 <div className="mt-2 space-y-1 text-sm">
                   {line.freeCases > 0 && line.appliedScheme && (
                     <p className="font-medium text-accent">
-                      +{line.freeCases} free · {schemeText(line.appliedScheme, lang)}
+                      {fmt(f.freeLine, { n: line.freeCases, scheme: schemeText(line.appliedScheme, lang) })}
                     </p>
                   )}
                   {line.discountPaise > 0 && line.appliedScheme && (
@@ -216,21 +215,21 @@ function FieldCart({ shop }: { shop: FieldShop }) {
         <aside className="lg:sticky lg:top-40">
           <dl className="mt-5 space-y-2 rounded-2xl bg-surface p-4 text-[15px] lg:mt-0">
             <div className="flex justify-between">
-              <dt className="text-muted">Items</dt>
+              <dt className="text-muted">{f.itemsTotal}</dt>
               <dd>{formatPaise(priced.subtotalPaise)}</dd>
             </div>
             {priced.discountPaise > 0 && (
               <div className="flex justify-between text-accent">
-                <dt>Scheme discount</dt>
+                <dt>{f.schemeDiscount}</dt>
                 <dd>−{formatPaise(priced.discountPaise)}</dd>
               </div>
             )}
             <div className="flex justify-between">
-              <dt className="text-muted">GST</dt>
+              <dt className="text-muted">{f.gst}</dt>
               <dd>{formatPaise(priced.gstPaise)}</dd>
             </div>
             <div className="flex justify-between border-t border-line pt-2 text-lg font-semibold">
-              <dt>Total</dt>
+              <dt>{f.total}</dt>
               <dd>{formatPaise(priced.totalPaise)}</dd>
             </div>
           </dl>
@@ -238,18 +237,19 @@ function FieldCart({ shop }: { shop: FieldShop }) {
           {overCredit && (
             <p role="status" className="mt-3 flex items-start gap-2 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
               <TriangleAlert size={16} aria-hidden className="mt-0.5 shrink-0" />
-              This is {formatPaise(priced.totalPaise - left)} over the shop&apos;s credit. The order is still taken, but the office will hold it for approval.
+              {fmt(f.overCredit, { amount: formatPaise(priced.totalPaise - left) })}
             </p>
           )}
 
           <label htmlFor="note" className="mt-4 block text-sm font-medium text-muted">
-            Note for the office (optional)
+            {f.noteLabel}
           </label>
           <input
             id="note"
             value={note}
             maxLength={200}
             onChange={(e) => setNote(e.target.value)}
+            lang={lang}
             className="mt-1 min-h-12 w-full rounded-xl border border-line bg-bg px-4 text-base focus:border-accent"
           />
 
@@ -260,17 +260,13 @@ function FieldCart({ shop }: { shop: FieldShop }) {
           )}
           <div className="mt-4 space-y-2">
             <Button type="button" disabled={busy || priced.hasIssues} onClick={() => void place()}>
-              {busy ? "Saving…" : online ? "Place order" : "Save order on this phone"}
+              {busy ? f.saving : online ? f.placeOrder : f.saveOnPhone}
             </Button>
             <Button type="button" variant="ghost" onClick={back}>
-              Add more products
+              {f.addMore}
             </Button>
           </div>
-          {!online && (
-            <p className="mt-3 text-center text-sm text-muted">
-              No connection. The order is saved here and sent to the office as soon as you are online.
-            </p>
-          )}
+          {!online && <p className="mt-3 text-center text-sm text-muted">{f.noConnectionNote}</p>}
         </aside>
       </div>
     </div>

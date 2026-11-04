@@ -1,7 +1,7 @@
 "use client";
 import { putOrder, listQueue, saveSnapshot } from "./store";
 import type { FieldSnapshot } from "./types";
-import type { QueuedOrder } from "./queue";
+import type { QueuedOrder, StockIssue } from "./queue";
 import type { PlacedLine } from "@/lib/orders/place-types";
 
 export type RefreshResult =
@@ -97,11 +97,22 @@ export async function sendOne(order: QueuedOrder): Promise<SendOutcome> {
   if (res.status === 401) return { kind: "stop", reason: "signed_out", order };
   if (res.status >= 500) return { kind: "stop", reason: "server", order };
 
-  const attention = (kind: NonNullable<QueuedOrder["problem"]>["kind"], message: string): SendOutcome => ({
+  const attention = (
+    kind: NonNullable<QueuedOrder["problem"]>["kind"],
+    message: string,
+    issues?: StockIssue[],
+  ): SendOutcome => ({
     kind: "needs_attention",
-    order: { ...order, status: "needs_attention", problem: { kind, message } },
+    order: { ...order, status: "needs_attention", problem: { kind, message, issues } },
   });
-  if (res.status === 409) return attention("stock", stockMessage(order, data));
+  if (res.status === 409) {
+    const issues: StockIssue[] = (data.issues ?? []).map((i) => ({
+      skuId: i.skuId,
+      code: i.issue.code === "OUT_OF_STOCK" ? "OUT_OF_STOCK" : "INSUFFICIENT_STOCK",
+      max: i.issue.maxOrderableCases,
+    }));
+    return attention("stock", stockMessage(order, data), issues);
+  }
   if (res.status === 403 && data.error === "not_your_shop") {
     return attention("not_your_shop", "This shop is no longer assigned to you. Ask the office.");
   }

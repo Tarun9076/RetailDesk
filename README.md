@@ -56,6 +56,7 @@ RetailDesk lets shops see the truth up front (stock, price, scheme, credit) and 
 
 **For salesmen (on the road, even with no signal)**
 
+- Use the whole app in **English or Hindi**. One button in the header switches, even with no signal, and everything follows: screens, product names, scheme wording, dates, and the messages the office sends back.
 - Sign in with their own mobile number and an SMS code. The app opens on **My shops**: only the shops the office assigned to them, with the shops that have gone quiet (14+ days) listed first under **Visit first**.
 - Open a shop to see **that shop's own prices**, stock, schemes and credit left, and take an order on its behalf. The same live pricing, scheme hints and credit warning the shopkeeper sees.
 - **Works offline.** The phone keeps every assigned shop's prices, stock, schemes and credit. An order taken with no signal is saved on the phone and sent on its own when the signal returns. A sync button and a status pill in the header show what is waiting.

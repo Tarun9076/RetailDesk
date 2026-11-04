@@ -7,6 +7,7 @@ export type QueueStatus = "pending" | "sending" | "sent" | "needs_attention";
 export interface QueuedLine {
   skuId: string;
   name: string; // so the order can be read without the catalogue
+  nameHi?: string | null; // for the Hindi screens
   qtyCases: number;
 }
 
@@ -17,6 +18,13 @@ export interface Expected {
 }
 
 export type ProblemKind = "stock" | "not_your_shop" | "invalid" | "error";
+
+/** One line the office could not supply. Kept as data, so the screen can say it in either language. */
+export interface StockIssue {
+  skuId: string;
+  code: "OUT_OF_STOCK" | "INSUFFICIENT_STOCK";
+  max?: number;
+}
 
 export interface QueuedOrder {
   id: string; // also the idempotency key: sending it twice can never make two orders
@@ -36,7 +44,8 @@ export interface QueuedOrder {
     lines: PlacedLine[];
     sentAt: string;
   };
-  problem?: { kind: ProblemKind; message: string };
+  /** `message` is an English fallback (and what older saved orders have); screens prefer `issues` and `kind`. */
+  problem?: { kind: ProblemKind; message: string; issues?: StockIssue[] };
 }
 
 export function newQueuedOrder(input: {
@@ -74,6 +83,7 @@ export function newQueuedOrder(input: {
 export interface LineChange {
   skuId: string;
   name: string;
+  nameHi?: string | null;
   expectedPaise: number;
   actualPaise: number;
   expectedFree: number;
@@ -94,7 +104,7 @@ export interface Change {
 export function describeChange(order: QueuedOrder): Change {
   const actual = order.result;
   if (!actual) return { changed: false, totalDeltaPaise: 0, lines: [] };
-  const names = new Map(order.lines.map((l) => [l.skuId, l.name]));
+  const lineOf = new Map(order.lines.map((l) => [l.skuId, l]));
   const before = new Map(order.expected.lines.map((l) => [l.skuId, l]));
   const lines: LineChange[] = [];
   for (const a of actual.lines) {
@@ -104,7 +114,8 @@ export function describeChange(order: QueuedOrder): Change {
     if (expectedPaise !== a.totalPaise || expectedFree !== a.freeCases) {
       lines.push({
         skuId: a.skuId,
-        name: names.get(a.skuId) ?? a.skuId,
+        name: lineOf.get(a.skuId)?.name ?? a.skuId,
+        nameHi: lineOf.get(a.skuId)?.nameHi ?? null,
         expectedPaise,
         actualPaise: a.totalPaise,
         expectedFree,

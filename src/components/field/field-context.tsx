@@ -2,12 +2,16 @@
 
 import { createContext, useContext } from "react";
 import type { Dict, Lang } from "@/lib/i18n/dict";
+import type { FieldDict } from "@/lib/i18n/field";
 import type { QueuedOrder } from "@/lib/field/queue";
 import type { FieldSnapshot } from "@/lib/field/types";
 
 export interface FieldContextValue {
   lang: Lang;
+  /** Product-card and catalogue words (shared with the shop app). */
   t: Dict["catalogue"];
+  /** The salesman screens' own words. */
+  f: FieldDict;
   snapshot: FieldSnapshot;
   queue: QueuedOrder[];
   online: boolean;

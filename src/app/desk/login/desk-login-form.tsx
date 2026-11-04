@@ -31,7 +31,10 @@ export function DeskLoginForm({ t }: { t: Dict["desk"] }) {
       setError(
         data.error === "rate_limited"
           ? fmt(t.errors.rateLimited, { s: Number(data.retryAfterSec ?? 60) })
-          : t.errors.invalid,
+          : // Only a real 401 means the password was checked and was wrong. A 500 is our fault.
+            res.status === 401
+            ? t.errors.invalid
+            : t.errors.server,
       );
     } catch {
       setError(t.errors.network);

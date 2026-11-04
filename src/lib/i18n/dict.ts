@@ -43,6 +43,7 @@ const en = {
       invalid: "Email or password is incorrect.",
       rateLimited: "Too many attempts. Try again in {s} seconds.",
       network: "No connection. Check your internet and try again.",
+      server: "Something went wrong on our side. Your password was not checked. Please try again in a moment.",
     },
   },
   home: {
@@ -229,6 +230,7 @@ const hi: Dict = {
     retailer: "रिटेलर? अपने मोबाइल से साइन इन करें",
     errors: {
       invalid: "ईमेल या पासवर्ड गलत है।",
+      server: "हमारी तरफ़ कुछ गड़बड़ हुई। आपका पासवर्ड जाँचा नहीं गया। कृपया थोड़ी देर बाद फिर कोशिश करें।",
       rateLimited: "बहुत ज़्यादा कोशिशें हुईं। {s} सेकंड बाद फिर कोशिश करें।",
       network: "इंटरनेट नहीं है। कनेक्शन जाँचकर फिर कोशिश करें।",
     },

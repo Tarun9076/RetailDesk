@@ -120,7 +120,12 @@ export default async function SalesmenPage(props: PageProps<"/desk/salesmen">) {
                   {s.name} · {s.city}
                 </p>
               </div>
-              <AssignSalesman shopId={s.id} shopName={s.shopName} current={s.salesmanId} salesmen={options} />
+              <div className="flex flex-wrap items-center gap-2">
+                <AssignSalesman shopId={s.id} shopName={s.shopName} current={s.salesmanId} salesmen={options} />
+                <Link href={`/desk/shops/${s.id}`} className="flex min-h-11 items-center rounded-xl border border-line px-3 text-sm font-medium hover:bg-surface">
+                  Edit shop
+                </Link>
+              </div>
             </li>
           ))}
         </ul>

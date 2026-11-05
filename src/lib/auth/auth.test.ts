@@ -80,7 +80,8 @@ describe("session token", () => {
 
   it("round-trips a payload", async () => {
     const token = await signSession(retailer, SECRET, NOW);
-    expect(await verifySession(token, SECRET, NOW)).toEqual(retailer);
+    const back = await verifySession(token, SECRET, NOW);
+    expect(back).toEqual({ ...retailer, issuedAtMs: NOW.getTime() });
   });
 
   it("rejects a token signed with another secret", async () => {

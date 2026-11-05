@@ -21,5 +21,6 @@ export async function POST(req: Request) {
   }
 
   await createSession({ sub: result.userId, role: "DESK", retailerId: null });
-  return json({ ok: true, redirect: "/desk" });
+  // A temporary password only opens the "choose your own password" screen.
+  return json({ ok: true, redirect: result.mustChangePassword ? "/desk/account?first=1" : "/desk" });
 }

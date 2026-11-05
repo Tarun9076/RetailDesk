@@ -6,11 +6,16 @@ import { usePathname } from "next/navigation";
 const TABS = [
   { href: "/desk/dashboard", label: "Dashboard", match: (p: string) => p.startsWith("/desk/dashboard") },
   { href: "/desk", label: "Orders", match: (p: string) => p === "/desk" || p.startsWith("/desk/orders") },
-  { href: "/desk/catalogue", label: "Catalogue", match: (p: string) => p.startsWith("/desk/catalogue") },
-  { href: "/desk/shops", label: "Shops", match: (p: string) => p.startsWith("/desk/shops") },
-  { href: "/desk/salesmen", label: "Salesmen", match: (p: string) => p.startsWith("/desk/salesmen") },
+  // Daily work first, then the set-up and admin screens.
   { href: "/desk/export", label: "Export", match: (p: string) => p.startsWith("/desk/export") },
   { href: "/desk/loading", label: "Loading list", match: (p: string) => p.startsWith("/desk/loading") },
+  { href: "/desk/shops", label: "Shops", match: (p: string) => p.startsWith("/desk/shops") },
+  { href: "/desk/catalogue", label: "Catalogue", match: (p: string) => p.startsWith("/desk/catalogue") },
+  { href: "/desk/salesmen", label: "Salesmen", match: (p: string) => p.startsWith("/desk/salesmen") },
+  { href: "/desk/balances", label: "Balances", match: (p: string) => p.startsWith("/desk/balances") },
+  { href: "/desk/tally", label: "Tally set-up", match: (p: string) => p.startsWith("/desk/tally") },
+  { href: "/desk/staff", label: "Staff", match: (p: string) => p.startsWith("/desk/staff") },
+  { href: "/desk/system", label: "System", match: (p: string) => p.startsWith("/desk/system") },
 ];
 
 export function DeskNav() {

@@ -18,7 +18,7 @@ export async function loadFieldSnapshot(salesmanId: string, now: Date = new Date
       orderBy: [{ brand: "asc" }, { name: "asc" }],
     }),
     db.retailer.findMany({
-      where: { salesmanId },
+      where: { salesmanId, active: true },
       include: { prices: true },
       orderBy: { shopName: "asc" },
     }),

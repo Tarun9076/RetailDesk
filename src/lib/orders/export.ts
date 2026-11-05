@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "@/lib/db";
-import { buildTallyXml, DEFAULT_TALLY_CONFIG, type TallyOrder } from "@/lib/tally/voucher";
+import { getTallyConfig } from "@/lib/tally/settings";
+import { buildTallyXml, type TallyOrder } from "@/lib/tally/voucher";
 import { buildSalesWorkbook } from "@/lib/tally/workbook";
 
 export type ExportFormat = "xlsx" | "xml";
@@ -91,7 +92,7 @@ export async function exportOrders(
   const body =
     format === "xlsx"
       ? await buildSalesWorkbook(prepared.vouchers)
-      : buildTallyXml(prepared.vouchers, { ...DEFAULT_TALLY_CONFIG, company: process.env.TALLY_COMPANY || undefined });
+      : buildTallyXml(prepared.vouchers, await getTallyConfig());
 
   return {
     ok: true,

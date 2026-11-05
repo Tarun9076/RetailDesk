@@ -13,7 +13,10 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "desk:reset": "tsx scripts/reset-desk-password.ts",
+    "db:backup": "tsx scripts/backup.ts",
+    "db:restore": "tsx scripts/restore.ts"
   },
   "dependencies": {
     "@google/genai": "^2.32.0",

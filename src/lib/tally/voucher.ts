@@ -38,9 +38,29 @@ export interface TallyConfig {
   company?: string;
   salesLedger: string;
   unit: string; // quantity unit as set up in Tally, e.g. "Case"
+  /** Name of the output CGST ledger. {rate} becomes the half-rate, e.g. "Output CGST @6%". */
+  cgstLedger?: string;
+  sgstLedger?: string;
+  /** The voucher type the vouchers are booked under in Tally. */
+  voucherType?: string;
 }
 
-export const DEFAULT_TALLY_CONFIG: TallyConfig = { salesLedger: "Sales", unit: "Case" };
+export const DEFAULT_CGST_LEDGER = "Output CGST @{rate}%";
+export const DEFAULT_SGST_LEDGER = "Output SGST @{rate}%";
+export const DEFAULT_VOUCHER_TYPE = "Sales";
+
+export const DEFAULT_TALLY_CONFIG: TallyConfig = {
+  salesLedger: "Sales",
+  unit: "Case",
+  cgstLedger: DEFAULT_CGST_LEDGER,
+  sgstLedger: DEFAULT_SGST_LEDGER,
+  voucherType: DEFAULT_VOUCHER_TYPE,
+};
+
+/** "Output CGST @{rate}%" with a 12% GST rate (so 6% each half) becomes "Output CGST @6%". */
+export function gstLedgerName(template: string, gstRateBp: number): string {
+  return template.replaceAll("{rate}", pct(gstRateBp / 2));
+}
 
 /** Escapes text for XML and drops characters XML 1.0 does not allow. */
 export function xmlEscape(text: string): string {
@@ -126,7 +146,13 @@ export function buildVoucher(order: TallyOrder, cfg: TallyConfig): string {
     for (const [kind, amount] of [["CGST", cgst], ["SGST", sgst]] as const) {
       gstLedgers.push(
         "<LEDGERENTRIES.LIST>",
-        tag("LEDGERNAME", `Output ${kind} @${pct(rateBp / 2)}%`),
+        tag(
+          "LEDGERNAME",
+          gstLedgerName(
+            (kind === "CGST" ? cfg.cgstLedger : cfg.sgstLedger) ?? (kind === "CGST" ? DEFAULT_CGST_LEDGER : DEFAULT_SGST_LEDGER),
+            rateBp,
+          ),
+        ),
         tag("ISDEEMEDPOSITIVE", "No"),
         tag("AMOUNT", rupees(amount)),
         "</LEDGERENTRIES.LIST>",
@@ -144,9 +170,9 @@ export function buildVoucher(order: TallyOrder, cfg: TallyConfig): string {
     .join(" | ");
 
   return [
-    `<TALLYMESSAGE xmlns:UDF="TallyUDF"><VOUCHER VCHTYPE="Sales" ACTION="Create" OBJVIEW="Invoice Voucher View">`,
+    `<TALLYMESSAGE xmlns:UDF="TallyUDF"><VOUCHER VCHTYPE="${xmlEscape(cfg.voucherType ?? DEFAULT_VOUCHER_TYPE)}" ACTION="Create" OBJVIEW="Invoice Voucher View">`,
     tag("DATE", tallyDate(order.date)),
-    tag("VOUCHERTYPENAME", "Sales"),
+    tag("VOUCHERTYPENAME", cfg.voucherType ?? DEFAULT_VOUCHER_TYPE),
     tag("VOUCHERNUMBER", order.number),
     tag("REFERENCE", order.number),
     tag("PARTYLEDGERNAME", order.partyLedger),

@@ -9,7 +9,7 @@ let dummyHash: Promise<string> | undefined;
 const getDummyHash = () => (dummyHash ??= argon2.hash("not-a-real-password"));
 
 export type DeskLoginResult =
-  | { ok: true; userId: string }
+  | { ok: true; userId: string; mustChangePassword: boolean }
   | { ok: false; reason: "invalid" | "rate_limited"; retryAfterSec?: number };
 
 export async function loginDesk(
@@ -33,7 +33,8 @@ export async function loginDesk(
     };
   }
 
-  const user = await db.user.findFirst({ where: { role: "DESK", email } });
+  // A switched-off account is treated exactly like an unknown one.
+  const user = await db.user.findFirst({ where: { role: "DESK", email, active: true } });
   const hash = user?.passwordHash ?? (await getDummyHash());
   const valid = await argon2.verify(hash, password).catch(() => false);
 
@@ -42,5 +43,5 @@ export async function loginDesk(
     return { ok: false, reason: "invalid" };
   }
   await clearHits(emailKey);
-  return { ok: true, userId: user.id };
+  return { ok: true, userId: user.id, mustChangePassword: user.mustChangePassword };
 }

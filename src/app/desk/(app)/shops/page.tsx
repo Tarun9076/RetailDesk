@@ -1,6 +1,7 @@
 import { MessageCircle, Phone, Store } from "lucide-react";
 import Link from "next/link";
 import { requireDesk } from "@/lib/auth/dal";
+import { db } from "@/lib/db";
 import {
   QUIET_AFTER_DAYS,
   LOST_AFTER_DAYS,
@@ -18,6 +19,7 @@ const FILTERS = [
   { key: "14", label: `No order in ${QUIET_AFTER_DAYS}+ days`, min: QUIET_AFTER_DAYS },
   { key: "30", label: `${LOST_AFTER_DAYS}+ days`, min: LOST_AFTER_DAYS },
   { key: "all", label: "All shops", min: 0 },
+  { key: "off", label: "Switched off", min: 0 },
 ];
 
 const BUCKET_STYLE: Record<Bucket, string> = {
@@ -47,7 +49,16 @@ export default async function ShopsPage(props: PageProps<"/desk/shops">) {
   const now = new Date();
   const rows = toRows(await loadShopActivity(now), now);
   const counts = countByBucket(rows);
-  const list = filter.key === "all" ? [...rows].sort((a, b) => (b.days ?? 9999) - (a.days ?? 9999)) : dormant(rows, filter.min);
+  const list =
+    filter.key === "off"
+      ? []
+      : filter.key === "all"
+        ? [...rows].sort((a, b) => (b.days ?? 9999) - (a.days ?? 9999))
+        : dormant(rows, filter.min);
+  const switchedOff =
+    filter.key === "off"
+      ? await db.retailer.findMany({ where: { active: false }, select: { id: true, shopName: true, name: true, city: true }, orderBy: { shopName: "asc" } })
+      : [];
 
   const stat = (label: string, n: number, tone: string) => (
     <div className="rounded-2xl border border-line p-4">
@@ -100,7 +111,28 @@ export default async function ShopsPage(props: PageProps<"/desk/shops">) {
         })}
       </div>
 
-      {list.length === 0 ? (
+      {filter.key === "off" ? (
+        switchedOff.length === 0 ? (
+          <div className="flex flex-col items-center py-20 text-center">
+            <Store size={40} aria-hidden className="text-muted" />
+            <p className="mt-4 text-muted">No shop is switched off.</p>
+          </div>
+        ) : (
+          <ul className="mt-4 divide-y divide-line rounded-2xl border border-line">
+            {switchedOff.map((s) => (
+              <li key={s.id} className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="font-semibold">{s.shopName}</p>
+                  <p className="text-sm text-muted">{s.name} · {s.city}</p>
+                </div>
+                <Link href={`/desk/shops/${s.id}`} className="flex min-h-12 items-center rounded-xl border border-line px-4 text-sm font-medium hover:bg-surface">
+                  Open and switch on
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )
+      ) : list.length === 0 ? (
         <div className="flex flex-col items-center py-20 text-center">
           <Store size={40} aria-hidden className="text-muted" />
           <p className="mt-4 text-muted">Every shop has ordered within the last {QUIET_AFTER_DAYS} days.</p>
@@ -129,6 +161,12 @@ export default async function ShopsPage(props: PageProps<"/desk/shops">) {
                 </p>
               </div>
               <div className="flex shrink-0 gap-2">
+                <Link
+                  href={`/desk/shops/${r.id}`}
+                  className="flex min-h-12 items-center rounded-xl border border-line px-4 text-sm font-medium hover:bg-surface"
+                >
+                  Edit
+                </Link>
                 <a
                   href={`tel:${r.phone}`}
                   className="flex min-h-12 items-center gap-2 rounded-xl border border-line px-4 text-sm font-medium hover:bg-surface"

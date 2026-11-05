@@ -23,6 +23,14 @@ export function parseRupees(input: string): number | null {
   return Number.isSafeInteger(paise) && paise > 0 ? paise : null;
 }
 
+/** Like parseRupees, but 0 is fine: for a credit limit or an amount owed, where nothing is a real answer. */
+export function parseRupeesOrZero(input: string): number | null {
+  const trimmed = input.replace(/[₹\s]/g, "");
+  if (trimmed === "") return null;
+  if (/^0+(\.0{1,2})?$/.test(trimmed)) return 0;
+  return parseRupees(trimmed);
+}
+
 /** 790 -> "7.90", for putting a stored price back into a form field. */
 export function paiseToInput(paise: number): string {
   return (paise / 100).toFixed(2);

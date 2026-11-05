@@ -53,3 +53,9 @@ Thumbs.db
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Database backups (contain password hashes and customer data)
+/backups/
+
+# Word and Office temporary lock files
+~$*

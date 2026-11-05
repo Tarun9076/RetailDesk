@@ -75,7 +75,35 @@ Steps to repeat the deployment:
 | `TWILIO_FROM` | With Twilio | The Twilio sending number, e.g. `+1...` |
 | `OTP_TEST_NUMBERS` | Demo | Comma-separated fake numbers that accept one fixed code |
 | `OTP_TEST_CODE` | Demo | The fixed six-digit code for those numbers |
-| `TALLY_COMPANY` | Optional | Company name written into the Tally XML export |
+| `TALLY_COMPANY` | Optional | Company name written into the Tally XML export. The desk's **Tally set-up** screen overrides it |
+| `BALANCES_API_TOKEN` | Optional | 24+ random characters. Turns on the route a script uses to send Tally balances every night. Empty = off |
+| `ALERT_WEBHOOK_URL` | Optional | Slack or Discord webhook address (https). The server posts a short message there when it fails. Empty = off |
+
+## 3a. Running the live system
+
+**Watching it.**
+- **Errors:** the desk's **System** tab lists every server problem once, with a count. Press *Send a test error* once after deploying: it should appear there and, if `ALERT_WEBHOOK_URL` is set, in your chat channel.
+- **Uptime:** point a free monitor (for example UptimeRobot, 5-minute checks) at `https://<your-app>/api/health`. It returns 200, or 503 when the database cannot be reached, and nothing else.
+
+**Backups.** Do all three; none replaces another.
+1. **Supabase's own backups** depend on the plan (Dashboard, *Database*, *Backups*). I did not check which plan this project is on.
+2. **From the desk:** *System*, then *Download a backup now*. All business data, compressed, **without** password hashes. Do it weekly and keep the file somewhere private (it has customer phone numbers).
+3. **From the command line:** `npm run db:backup` writes `backups/retaildesk-<date>.json.gz`, **with** the desk password hashes. Store it like a password. It is ignored by git.
+
+**Restoring** (only ever into an empty database):
+```bash
+# 1. create an empty database, then give it the tables
+DIRECT_URL=<the new database> npm run db:deploy
+# 2. load the backup
+RESTORE_DATABASE_URL=<the new database> npm run db:restore -- backups/retaildesk-<date>.json.gz
+# 3. point DATABASE_URL and DIRECT_URL at it. If the backup came from the desk download (no hashes):
+DESK_EMAIL=<email> DESK_NEW_PASSWORD='<a long password>' npm run desk:reset
+```
+The restore refuses a database that already has rows, and uses its own variable so it cannot touch the live database by accident. It was practised by restoring a real backup into a separate schema and comparing every row of every table with the live data.
+
+**Locked out of the desk?** `DESK_EMAIL=<email> DESK_NEW_PASSWORD='<a long password>' npm run desk:reset` sets a password; the person is asked to choose their own at the next sign-in.
+
+**Tally balances every night.** Set `BALANCES_API_TOKEN` on the server (and redeploy). On the office PC, set `RETAILDESK_URL` and `RETAILDESK_TOKEN` (the same value) and run `scripts/send-balances.ps1 -File <Tally CSV> -Apply`, for example from Windows Task Scheduler after the day's vouchers are entered. Without `-Apply` it only checks. The CSV is Tally's *Sundry Debtors* list exported with a ledger-name column and a closing-balance column.
 
 ## 4. Demo logins
 

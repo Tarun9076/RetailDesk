@@ -10,7 +10,7 @@ import type { ShopActivity } from "@/lib/dashboard";
 export async function loadShopActivity(now: Date = new Date()): Promise<ShopActivity[]> {
   const since = new Date(now.getTime() - 90 * 86_400_000);
   const [shops, last, recent, open] = await Promise.all([
-    db.retailer.findMany({ orderBy: { shopName: "asc" } }),
+    db.retailer.findMany({ where: { active: true }, orderBy: { shopName: "asc" } }),
     db.order.groupBy({
       by: ["retailerId"],
       where: { status: { not: "CANCELLED" } },

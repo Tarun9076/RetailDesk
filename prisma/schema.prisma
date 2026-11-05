@@ -49,8 +49,10 @@ model Retailer {
   outstandingPaise Int      @default(0)
   tallyLedgerName  String?
   salesmanId       String? // the salesman who visits this shop; null = not assigned yet
+  active           Boolean  @default(true) // false = switched off: cannot sign in or order, hidden from salesmen
   createdAt        DateTime @default(now())
 
+  events   ShopEvent[]
   salesman User?  @relation("SalesmanShops", fields: [salesmanId], references: [id], onDelete: SetNull)
   users    User[] @relation("RetailerLogins")
   prices   RetailerPrice[]
@@ -67,6 +69,8 @@ model User {
   passwordHash String?
   phone        String?   @unique // salesman login (E.164); retailers log in with Retailer.phone
   active       Boolean   @default(true) // false = left the company: cannot sign in, existing sessions stop working
+  mustChangePassword Boolean @default(false) // desk staff: set when an admin gives a temporary password
+  sessionsValidFrom  DateTime? // logins issued before this moment are rejected (password changed or reset)
   retailerId   String?
   retailer     Retailer? @relation("RetailerLogins", fields: [retailerId], references: [id])
   createdAt    DateTime  @default(now())
@@ -215,6 +219,72 @@ model AiCapture {
   status     CaptureStatus @default(DRAFT)
   createdAt  DateTime      @default(now())
   retailer   Retailer      @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+}
+
+// Who changed a shop's details, credit limit, balance or status, and what they changed. Never edited.
+model ShopEvent {
+  id         String   @id @default(cuid())
+  retailerId String
+  kind       String // SHOP_CREATED | SHOP_UPDATED | SHOP_SWITCHED_OFF | SHOP_SWITCHED_ON | BALANCE_IMPORTED
+  summary    String
+  byName     String
+  createdAt  DateTime @default(now())
+  retailer   Retailer @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+
+  @@index([retailerId, createdAt])
+}
+
+// Who added, reset, switched off or switched on desk staff. Never edited.
+model StaffEvent {
+  id        String   @id @default(cuid())
+  userId    String // the staff member the change was about
+  kind      String // STAFF_ADDED | PASSWORD_RESET | PASSWORD_CHANGED | SWITCHED_OFF | SWITCHED_ON
+  summary   String
+  byName    String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
+}
+
+// One run of "update the amounts shops owe from Tally": previewed first, then applied.
+model BalanceImport {
+  id        String    @id @default(cuid())
+  source    String // UPLOAD | API
+  fileName  String?
+  byName    String
+  status    String // PREVIEW | APPLIED | DISCARDED
+  rows      Json // [{ retailerId, ledger, beforePaise, afterPaise }]
+  summary   Json // counts and the lines that did not match anything
+  createdAt DateTime  @default(now())
+  appliedAt DateTime?
+
+  @@index([createdAt])
+}
+
+// Names the client sets up in Tally, kept in the database so the desk can fix them without a code change.
+model TallySetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+// Server errors, grouped by what went wrong, so a problem is seen once with a count instead of a thousand times.
+model ErrorLog {
+  id          String    @id @default(cuid())
+  fingerprint String    @unique
+  message     String
+  route       String?
+  method      String?
+  digest      String?
+  detail      String?
+  count       Int       @default(1)
+  firstSeenAt DateTime  @default(now())
+  lastSeenAt  DateTime  @default(now())
+  alertedAt   DateTime?
+  resolved    Boolean   @default(false)
+
+  @@index([lastSeenAt])
 }
 
 // Generic sliding-window rate limiting (OTP requests, failed desk logins).

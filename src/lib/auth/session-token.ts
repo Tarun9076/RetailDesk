@@ -6,6 +6,11 @@ export interface SessionPayload {
   sub: string; // user id
   role: Role;
   retailerId: string | null;
+  /**
+   * When the login was issued, to the millisecond. Present on a token that has been read back. Tokens
+   * made before this field existed only know the second, so they are treated as issued at the start of it.
+   */
+  issuedAtMs?: number;
 }
 
 /** Desk staff sit at shared office PCs, so their sessions are short. */
@@ -25,7 +30,7 @@ export async function signSession(
 ): Promise<string> {
   if (secret.length < 32) throw new Error("SESSION_SECRET must be at least 32 characters");
   const iat = Math.floor(now.getTime() / 1000);
-  return new SignJWT({ role: payload.role, retailerId: payload.retailerId })
+  return new SignJWT({ role: payload.role, retailerId: payload.retailerId, ims: now.getTime() })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(payload.sub)
     .setIssuedAt(iat)
@@ -49,6 +54,8 @@ export async function verifySession(
       sub: payload.sub,
       role,
       retailerId: typeof payload.retailerId === "string" ? payload.retailerId : null,
+      issuedAtMs:
+        typeof payload.ims === "number" ? payload.ims : typeof payload.iat === "number" ? payload.iat * 1000 : undefined,
     };
   } catch {
     return null;

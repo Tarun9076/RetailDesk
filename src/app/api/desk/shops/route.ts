@@ -46,6 +46,13 @@ export async function POST(req: Request) {
         tallyLedgerName: d.shopName,
         salesmanId: d.salesmanId ?? null,
         users: { create: { role: "RETAILER", name: d.ownerName } },
+        events: {
+          create: {
+            kind: "SHOP_CREATED",
+            byName: user.name,
+            summary: `Shop added with credit limit ₹${d.creditLimitRupees.toLocaleString("en-IN")}`,
+          },
+        },
       },
       select: { id: true },
     });

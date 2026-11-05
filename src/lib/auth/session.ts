@@ -9,8 +9,8 @@ import {
 
 export const SESSION_COOKIE = "rd_session";
 
-export async function createSession(payload: SessionPayload) {
-  const token = await signSession(payload, sessionSecret());
+export async function createSession(payload: SessionPayload, issuedAt: Date = new Date()) {
+  const token = await signSession(payload, sessionSecret(), issuedAt);
   (await cookies()).set(SESSION_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

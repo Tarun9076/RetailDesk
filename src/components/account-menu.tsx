@@ -1,14 +1,13 @@
 "use client";
 
-import { EllipsisVertical, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
 import { DownloadAppButton } from "@/components/install/download-app-button";
 import type { Dict } from "@/lib/i18n/dict";
 
 /**
- * The rarely used things (install the app, sign out) live behind one quiet button, so the top of
- * every screen is the shop's name and the language switch, and nothing else competes with the work.
+ * Install (until the app is installed) and Sign out, both in plain sight: nobody should have to hunt
+ * through a menu to leave their account on a shared phone or office computer.
  */
 export function AccountMenu({
   t,
@@ -18,56 +17,25 @@ export function AccountMenu({
   signOutTo: string;
 }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const box = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const away = (e: PointerEvent) => {
-      if (box.current && !box.current.contains(e.target as Node)) setOpen(false);
-    };
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    document.addEventListener("pointerdown", away);
-    document.addEventListener("keydown", esc);
-    return () => {
-      document.removeEventListener("pointerdown", away);
-      document.removeEventListener("keydown", esc);
-    };
-  }, [open]);
 
   return (
-    <div ref={box} className="relative">
+    <div className="flex items-center gap-1">
+      {/* On the narrowest phones there is no room for it; the install steps are still on the login screen. */}
+      <div className="hidden min-[400px]:block">
+        <DownloadAppButton t={t.install} />
+      </div>
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-label={t.common.menu}
-        className="flex h-11 w-11 items-center justify-center rounded-full text-muted hover:bg-surface hover:text-ink"
+        onClick={async () => {
+          await fetch("/api/auth/logout", { method: "POST" }).catch(() => undefined);
+          router.replace(signOutTo);
+          router.refresh();
+        }}
+        className="flex min-h-11 items-center gap-1.5 rounded-full border border-line px-3 text-sm font-medium text-ink hover:bg-surface"
       >
-        <EllipsisVertical size={20} aria-hidden />
+        <LogOut size={16} aria-hidden className="text-muted" />
+        {t.common.signOut}
       </button>
-      {open && (
-        <div
-          role="menu"
-          className="absolute right-0 top-12 z-30 w-60 overflow-hidden rounded-2xl border border-line bg-bg py-1 shadow-[0_8px_30px_rgba(21,33,27,0.12)]"
-        >
-          <DownloadAppButton t={t.install} variant="menu" />
-          <button
-            type="button"
-            role="menuitem"
-            onClick={async () => {
-              await fetch("/api/auth/logout", { method: "POST" }).catch(() => undefined);
-              router.replace(signOutTo);
-              router.refresh();
-            }}
-            className="flex min-h-12 w-full items-center gap-3 px-4 text-left text-[15px] text-ink hover:bg-surface"
-          >
-            <LogOut size={18} aria-hidden className="text-muted" />
-            {t.common.signOut}
-          </button>
-        </div>
-      )}
     </div>
   );
 }

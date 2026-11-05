@@ -78,10 +78,7 @@ RetailDesk lets shops see the truth up front (stock, price, scheme, credit) and 
 - **Add a salesman** (name and mobile number): they can sign in at once with an SMS code. **Switch a salesman off** when they leave: they are signed out immediately, cannot sign in, and their shops go back to unassigned. Nothing is deleted, so the orders they took keep their name.
 - **Add a shop** (name, owner, mobile, area, credit limit, amount owed, optional salesman): the owner can sign in at once. One mobile number can belong to one account only, whether a shop or a salesman.
 - **Edit or switch off a shop** (Shops tab, then **Edit**): change its name, owner, mobile number, area, **credit limit**, amount owed, **Tally name** and salesman. Switching a shop off signs its owner out at once, stops it ordering, and removes it from its salesman's phone; nothing is deleted. Changing the mobile number also signs the owner out everywhere. Every change goes into the shop's history.
-- **Balances tab (from Tally):** upload the Sundry Debtors list exported from Tally (Excel or CSV). You see exactly which shops' amounts would change, which names matched no shop, which are in credit, and which shops were not in the file, and **nothing is saved until you press Save**. A shop whose amount changed after the preview is skipped, not overwritten. A script on the office PC can also send the list every night (see [Tally balances](#tally-balances)).
-- **Tally set-up tab:** type the names your Tally uses (company, sales ledger, GST ledgers, unit, voucher type) without a code change, and download a **checklist of every ledger, stock item and unit** that must exist in Tally before the export imports.
 - **Staff tab:** add colleagues (they get a temporary password and must choose their own at first sign-in), reset a forgotten password, switch someone off when they leave (signed out at once), and see the history. Anyone can change their own password; doing so signs out their other computers.
-- **System tab:** database health, every server problem listed once with a count (names, numbers and emails removed), a **Send a test error** button, alerts to Slack or Discord when something fails, and **Download a backup**.
 - **Van loading list:** what to pick from the godown, and what drops at each shop. Printable.
 - **Shops dashboard:** which shops have gone quiet (no order in 14+ days, or 30+), with last order date, 90-day orders, credit left, and one-tap **Call** and **WhatsApp** buttons. Shops that never ordered are listed too.
 
@@ -107,9 +104,7 @@ RetailDesk lets shops see the truth up front (stock, price, scheme, credit) and 
 | Catalogue admin: products, prices, GST, stock, schemes, shop prices, change history | Done, with tests |
 | Edit and switch off shops | Done, with tests |
 | Desk staff accounts: add, temporary passwords, reset, switch off, change own password | Done, with tests |
-| Balances from Tally: upload with preview, and an automatic route | Done, with tests (not run against a real Tally export) |
-| Tally set-up: configurable names and a checklist of what must exist in Tally | Done. **The first import into a real Tally is still to be done** |
-| Monitoring: error log, alerts, health check, backups and restore | Done, with tests |
+| Monitoring: error log, alerts, health check, command-line backup and restore | Done, with tests |
 | Voice notes, photo of a list | Not in the core build |
 
 ## Tech stack
@@ -239,8 +234,7 @@ Names only. Put your values in `.env`.
 | `OTP_TEST_CODE` | Demo only | The fixed 6-digit code for those numbers |
 | `SMS_PROVIDER` | Yes | `console` (prints codes locally) or `twilio` |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM` | With Twilio | Real SMS sending |
-| `TALLY_COMPANY` | Optional | Company name written into the Tally file (the desk's Tally set-up screen takes priority) |
-| `BALANCES_API_TOKEN` | Optional | 24+ random characters. Switches on the automatic nightly balance route; leave empty to keep it off |
+| `TALLY_COMPANY` | Optional | Company name written into the Tally file |
 | `ALERT_WEBHOOK_URL` | Optional | Slack or Discord webhook (https) that is told when the server fails. Leave empty for no alerts |
 | `GEMINI_API_KEY` | For the AI reader | Google Gemini access. Without it, the basic reader is used |
 | `GEMINI_MODEL`, `GEMINI_FALLBACK_MODEL` | Optional | Models to ask. Defaults to the `-latest` aliases, which follow Google's current models |
@@ -377,21 +371,7 @@ The app ships a web app manifest and icons (drawn in code), so it can be added t
 
 ### Tally balances
 
-A shop's credit is checked against **what it owes in Tally**, so that figure has to stay current.
-
-1. **By hand:** the desk's **Balances** tab. Upload the Sundry Debtors list exported from Tally (Excel `.xlsx` or CSV). Column names are found by what they are called, below any title lines, so it reads Tally's *Outstandings*, *Group Summary* and plain ledger lists: a **Closing Balance** column with `Dr` and `Cr`, separate **Debit** and **Credit** columns, or bill-wise **Pending Amount** rows (added up per party). Amounts are read exactly, never through floating point (`1,25,000.50 Dr` is 12,500,050 paise).
-2. **Matching:** a shop is found by its **Name in Tally** (or its shop name if none is set), ignoring capitals, spacing and punctuation. A name that fits no shop or two shops is listed and skipped, never guessed. A shop in **credit** in Tally (`Cr`) is stored as ₹0 and listed.
-3. **Preview first:** nothing is saved until the desk presses Save. A shop whose amount changed after the preview (an order was exported, someone corrected it by hand) is skipped, and the page says so.
-4. **Automatically:** set `BALANCES_API_TOKEN` on the server, then run `scripts/send-balances.ps1` on the office PC (by hand or from Windows Task Scheduler) on a CSV exported from Tally. Without `-Apply` it only checks and reports.
-   ```powershell
-   $env:RETAILDESK_URL = "https://your-app.vercel.app"
-   $env:RETAILDESK_TOKEN = "<same value as BALANCES_API_TOKEN>"
-   .\scripts\send-balances.ps1 -File C:\Tally\debtors.csv            # check only
-   .\scripts\send-balances.ps1 -File C:\Tally\debtors.csv -Apply     # write it
-   ```
-   Getting Tally to write that CSV by itself each night is done with Tally's own scheduling or an ODBC/TDL export, which is a job for whoever looks after the client's Tally.
-
-Balances raised by exporting an order (A13) are replaced by Tally's figure at the next import, so import after the day's vouchers are entered.
+A shop's credit is checked against **what it owes in Tally**. For now the figure is the one in the seed data plus orders exported from the desk. Reading it back from Tally (an import screen and a nightly script) was built and then **taken out for now**; it is listed under what was cut.
 
 ### Login
 
@@ -406,7 +386,7 @@ Balances raised by exporting an order (A13) are replaced by Tally's figure at th
 
 - **Errors:** Next.js calls `onRequestError` (`src/instrumentation.ts`) for every server failure. Each is stored once per kind with a count, after removing emails, phone numbers, tokens and database addresses. The first time something fails, and again if it returns after being marked as dealt with, a short message goes to `ALERT_WEBHOOK_URL`; a repeat is mentioned at most once an hour. A failure in the logging itself never makes the original request worse (tested with the alert address down: the request still fails normally in 0.2 s and is still logged).
 - **Health:** `GET /api/health` answers 200 or 503 depending on whether the database is reachable, and says nothing else. Point a free uptime monitor at it.
-- **Backups:** the System tab downloads all business data as one compressed file (no password hashes). `npm run db:backup` makes a full copy including hashes. `npm run db:restore` loads a copy into an empty database only, and was checked by restoring a real backup into a separate schema and comparing **every row** of every table with the live data.
+- **Backups:** `npm run db:backup` makes a full copy including hashes. `npm run db:restore` loads a copy into an empty database only, and was checked by restoring a real backup into a separate schema and comparing **every row** of every table with the live data.
 
 ### Who can see what
 

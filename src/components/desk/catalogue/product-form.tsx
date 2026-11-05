@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ProductImage } from "@/components/retailer/product-image";
 import { ErrorNote } from "@/components/ui";
 import { GST_RATES_BP, paiseToInput, parseRupees } from "@/lib/catalogue-admin/rules";
 import { formatPaise } from "@/lib/money";
@@ -12,6 +13,7 @@ export interface ProductValues {
   code: string;
   name: string;
   nameHi: string;
+  imageUrl: string;
   brand: string;
   piecesPerCase: number;
   pricePaise: number | null;
@@ -30,6 +32,7 @@ export function ProductForm({ mode, initial, brands }: { mode: "create" | "edit"
     code: initial.code,
     name: initial.name,
     nameHi: initial.nameHi,
+    imageUrl: initial.imageUrl,
     brand: initial.brand,
     pieces: initial.piecesPerCase ? String(initial.piecesPerCase) : "",
     price: initial.pricePaise ? paiseToInput(initial.pricePaise) : "",
@@ -62,6 +65,7 @@ export function ProductForm({ mode, initial, brands }: { mode: "create" | "edit"
       const common = {
         name: v.name,
         nameHi: v.nameHi.trim() || null,
+        imageUrl: v.imageUrl.trim() || null,
         brand: v.brand,
         piecesPerCase: pieces,
         pricePaise,
@@ -134,6 +138,18 @@ export function ProductForm({ mode, initial, brands }: { mode: "create" | "edit"
           <label htmlFor="nameHi" className={label}>Name in Hindi (optional)</label>
           <input id="nameHi" lang="hi" value={v.nameHi} onChange={set("nameHi")} maxLength={120} className={input} />
           <p className={hint}>Shown to shopkeepers who choose Hindi.</p>
+        </div>
+        <div className="sm:col-span-2">
+          <label htmlFor="imageUrl" className={label}>Photo address (optional)</label>
+          <div className="flex items-start gap-3">
+            <div className="w-24 shrink-0">
+              <ProductImage key={v.imageUrl} name={v.name || "Product"} brand={v.brand || "Brand"} imageUrl={v.imageUrl} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <input id="imageUrl" type="url" inputMode="url" value={v.imageUrl} onChange={set("imageUrl")} maxLength={400} placeholder="https://…" className={input} />
+              <p className={hint}>A link to a clear picture on a plain background, starting with https. Shopkeepers see it large. Without one, a drawn pack is shown, as in the preview.</p>
+            </div>
+          </div>
         </div>
         <div>
           <label htmlFor="price" className={label}>Dealer price per piece (₹, GST extra)</label>

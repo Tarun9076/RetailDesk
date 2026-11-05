@@ -4,7 +4,17 @@ import { GST_RATES_BP } from "./rules";
 
 const gst = z.number().int().refine((n) => (GST_RATES_BP as readonly number[]).includes(n), "Unknown GST rate");
 
+/** A photo is an https address, kept short. Empty means "no photo": a drawn pack is shown. */
+const imageUrl = z
+  .string()
+  .trim()
+  .max(400)
+  .refine((v) => v === "" || /^https:\/\/[^\s]+$/i.test(v), "The photo address must start with https://")
+  .nullable()
+  .optional();
+
 export const ProductBody = z.object({
+  imageUrl,
   code: z
     .string()
     .trim()

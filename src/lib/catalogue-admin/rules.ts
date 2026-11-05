@@ -79,6 +79,7 @@ export function toIstDateInput(d: Date | null): string {
 export interface ProductFields {
   name: string;
   nameHi: string | null;
+  imageUrl?: string | null;
   brand: string;
   piecesPerCase: number;
   pricePaise: number;
@@ -91,6 +92,7 @@ export function describeProductChange(before: ProductFields, after: ProductField
   const out: string[] = [];
   if (before.name !== after.name) out.push(`Name "${before.name}" to "${after.name}"`);
   if ((before.nameHi ?? "") !== (after.nameHi ?? "")) out.push("Hindi name changed");
+  if ((before.imageUrl ?? "") !== (after.imageUrl ?? "")) out.push(after.imageUrl ? "Photo changed" : "Photo removed");
   if (before.brand !== after.brand) out.push(`Brand "${before.brand}" to "${after.brand}"`);
   if (before.piecesPerCase !== after.piecesPerCase) out.push(`Pieces per case ${before.piecesPerCase} to ${after.piecesPerCase}`);
   if (before.pricePaise !== after.pricePaise) out.push(`Dealer price ${formatPaise(before.pricePaise)} to ${formatPaise(after.pricePaise)} per piece`);

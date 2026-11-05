@@ -85,17 +85,17 @@ function Browse({ shop }: { shop: FieldShop }) {
     <>
       <CatalogueView t={t} />
       {count > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-bg/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur">
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6">
           <button
             type="button"
             onClick={() => go(`#/shop/${encodeURIComponent(shop.id)}/cart`)}
-            className="mx-auto flex min-h-14 w-full max-w-6xl items-center justify-between rounded-xl bg-accent px-5 text-white hover:bg-accent-strong"
+            className="pointer-events-auto mx-auto flex min-h-14 w-full max-w-xl items-center justify-between gap-3 rounded-2xl bg-accent pl-5 pr-4 text-white shadow-[0_10px_30px_rgba(20,82,54,0.35)] transition-colors hover:bg-accent-strong"
           >
-            <span className="flex min-w-0 items-center gap-2 font-medium">
+            <span className="flex min-w-0 items-center gap-2 text-[15px] font-medium">
               <ShoppingBag size={20} aria-hidden className="shrink-0" />
               <span className="truncate">{fmt(count === 1 ? f.itemOne : f.itemMany, { n: count })}</span>
             </span>
-            <span className="ml-3 shrink-0 text-lg font-semibold">{formatPaise(priced.totalPaise)}</span>
+            <span className="shrink-0 text-lg font-semibold tabular-nums">{formatPaise(priced.totalPaise)}</span>
           </button>
         </div>
       )}

@@ -3,9 +3,9 @@
 import { Minus, Plus } from "lucide-react";
 
 /**
- * Large, thumb-friendly stepper. Typing a number also works.
- * `compact` is for narrow cards: 44 px buttons with tight gaps, and a quantity
- * box that cannot shrink below a readable width (it once collapsed to 4 px on a 320 px phone).
+ * Large, thumb-friendly stepper in one soft green bar: minus, the number, plus. Typing a number also works.
+ * `compact` is for narrow cards (it once collapsed to 4 px on a 320 px phone): the number box cannot
+ * shrink below a readable width.
  */
 export function QtyStepper({
   value,
@@ -20,9 +20,9 @@ export function QtyStepper({
   label: string;
   compact?: boolean;
 }) {
-  const btn = `flex h-12 ${compact ? "w-11" : "w-12"} shrink-0 items-center justify-center rounded-xl border border-line bg-bg text-ink transition-colors hover:bg-surface disabled:cursor-not-allowed disabled:opacity-40`;
+  const btn = `flex h-12 ${compact ? "w-11" : "w-12"} shrink-0 items-center justify-center rounded-xl text-accent transition-colors hover:bg-accent/10 active:bg-accent/15 disabled:cursor-not-allowed disabled:opacity-30`;
   return (
-    <div className={`flex items-center ${compact ? "gap-1" : "gap-1.5"}`} role="group" aria-label={label}>
+    <div className="flex items-center rounded-xl bg-accent-soft" role="group" aria-label={label}>
       <button type="button" className={btn} aria-label={`${label} −`} disabled={value <= 0} onClick={() => onChange(value - 1)}>
         <Minus size={18} aria-hidden />
       </button>
@@ -33,7 +33,7 @@ export function QtyStepper({
         value={value}
         onChange={(e) => onChange(Number(e.target.value.replace(/\D/g, "")) || 0)}
         onFocus={(e) => e.target.select()}
-        className="h-12 min-w-[2.75rem] flex-1 rounded-xl border border-line bg-bg text-center text-lg font-medium focus:border-accent"
+        className="h-12 min-w-[2.5rem] flex-1 bg-transparent text-center text-lg font-semibold tabular-nums text-ink focus:outline-none"
       />
       <button type="button" className={btn} aria-label={`${label} +`} disabled={value >= max} onClick={() => onChange(value + 1)}>
         <Plus size={18} aria-hidden />

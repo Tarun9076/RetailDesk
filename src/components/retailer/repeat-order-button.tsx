@@ -21,7 +21,8 @@ export function RepeatOrderButton({
         replace(Object.fromEntries(lines.map((l) => [l.skuId, l.qtyCases])));
         router.push("/cart");
       }}
-      className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-accent px-4 text-sm font-medium text-accent hover:bg-accent-soft"
+      // Quiet on purpose: a list of orders is a list of these, and each should not shout.
+      className="-ml-3 flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 text-sm font-medium text-accent transition-colors hover:bg-accent-soft"
     >
       <RotateCcw size={16} aria-hidden />
       {label}

@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { compareSchemes, isSchemeLive } from "@/lib/pricing/engine";
 import type { SchemeRule } from "@/lib/pricing/types";
 import type { CatalogueItem } from "@/lib/catalogue-types";
+import { safeImageUrl } from "@/lib/product-look";
 
 /**
  * The catalogue as one specific retailer sees it: their own price where the
@@ -41,6 +42,7 @@ export async function loadCatalogue(
       casePricePaise: unitPricePaise * s.piecesPerCase,
       gstRateBp: s.gstRateBp,
       stockCases: s.stockCases,
+      imageUrl: safeImageUrl(s.imageUrl),
       schemes,
     };
   });

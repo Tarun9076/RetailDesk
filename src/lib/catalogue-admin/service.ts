@@ -27,6 +27,7 @@ export async function createProduct(input: z.infer<typeof ProductBody>, byName: 
           code: input.code,
           name: input.name,
           nameHi: input.nameHi || null,
+          imageUrl: input.imageUrl || null,
           brand: input.brand,
           piecesPerCase: input.piecesPerCase,
           pricePaise: input.pricePaise,
@@ -57,6 +58,7 @@ export async function updateProduct(id: string, patch: z.infer<typeof ProductPat
     const after = {
       name: patch.name,
       nameHi: patch.nameHi || null,
+      imageUrl: patch.imageUrl || null,
       brand: patch.brand,
       piecesPerCase: patch.piecesPerCase,
       pricePaise: patch.pricePaise,

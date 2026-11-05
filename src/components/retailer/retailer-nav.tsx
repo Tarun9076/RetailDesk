@@ -12,8 +12,8 @@ export function RetailerNav({ t }: { t: Dict["nav"] }) {
     { href: "/orders", label: t.orders, match: ["/orders"] },
   ];
   return (
-    <nav aria-label="Main" className="border-b border-line bg-bg">
-      <div className="no-scrollbar mx-auto flex max-w-6xl gap-1 overflow-x-auto px-4 sm:px-6">
+    <nav aria-label="Main" className="border-b border-line print:hidden">
+      <div className="no-scrollbar mx-auto flex max-w-6xl gap-5 overflow-x-auto pl-[max(1rem,env(safe-area-inset-left))] pr-4 sm:gap-7 sm:px-6">
         {tabs.map((tab) => {
           const active = tab.match.some((m) => pathname.startsWith(m));
           return (
@@ -21,8 +21,8 @@ export function RetailerNav({ t }: { t: Dict["nav"] }) {
               key={tab.href}
               href={tab.href}
               aria-current={active ? "page" : undefined}
-              className={`flex min-h-12 shrink-0 items-center border-b-2 px-4 text-sm font-medium ${
-                active ? "border-accent text-accent" : "border-transparent text-muted hover:text-ink"
+              className={`flex min-h-11 shrink-0 items-center border-b-2 text-[15px] font-medium transition-colors ${
+                active ? "border-accent text-ink" : "border-transparent text-muted hover:text-ink"
               }`}
             >
               {tab.label}

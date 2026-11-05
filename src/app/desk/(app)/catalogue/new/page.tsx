@@ -20,7 +20,7 @@ export default async function NewProductPage() {
         <ProductForm
           mode="create"
           brands={brands}
-          initial={{ code: "", name: "", nameHi: "", brand: "", piecesPerCase: 0, pricePaise: null, gstRateBp: 1200, active: true }}
+          initial={{ code: "", name: "", nameHi: "", imageUrl: "", brand: "", piecesPerCase: 0, pricePaise: null, gstRateBp: 1200, active: true }}
         />
       </div>
     </div>

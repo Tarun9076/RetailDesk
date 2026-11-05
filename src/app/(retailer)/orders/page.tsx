@@ -38,9 +38,10 @@ export default async function OrdersPage() {
         </div>
       ) : (
         // A list on a phone, a grid of cards on a tablet or laptop.
-        <ul className="mt-4 space-y-3 md:grid md:grid-cols-2 md:gap-4 md:space-y-0 lg:grid-cols-3">
+        // A plain list on a phone (rules between rows, no boxes); quiet cards on a tablet or laptop.
+        <ul className="mt-4 divide-y divide-line md:grid md:grid-cols-2 md:gap-4 md:divide-y-0 lg:grid-cols-3">
           {orders.map((o) => (
-            <li key={o.id} className="rounded-2xl border border-line p-4">
+            <li key={o.id} className="py-4 md:rounded-2xl md:border md:border-line md:p-5">
               <Link href={`/orders/${o.id}`} className="block">
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -51,7 +52,7 @@ export default async function OrdersPage() {
                   </div>
                   <OrderStatus status={o.status} t={t.orders.status} />
                 </div>
-                <p className="mt-2 text-lg font-semibold">{formatPaise(o.totalPaise)}</p>
+                <p className="mt-2 text-xl font-semibold tracking-tight tabular-nums">{formatPaise(o.totalPaise)}</p>
               </Link>
               <div className="mt-3">
                 <RepeatOrderButton lines={o.lines} label={t.orders.repeat} />

@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "@/lib/db";
 import { liveSchemes } from "@/lib/catalogue";
+import { safeImageUrl } from "@/lib/product-look";
 import type { FieldSnapshot } from "./types";
 
 /**
@@ -59,6 +60,7 @@ export async function loadFieldSnapshot(salesmanId: string, now: Date = new Date
       pricePaise: s.pricePaise,
       gstRateBp: s.gstRateBp,
       stockCases: s.stockCases,
+      imageUrl: safeImageUrl(s.imageUrl),
       schemes: liveSchemes(s.schemes, now),
     })),
     shops: shops.map((s) => ({

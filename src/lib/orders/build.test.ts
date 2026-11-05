@@ -8,16 +8,19 @@ const catalogue: CatalogueItem[] = [
   {
     id: "biscuit", code: "SKU-BS-075", name: "Glucose biscuit", nameHi: null, brand: "A",
     piecesPerCase: 96, unitPricePaise: 790, casePricePaise: 790 * 96, gstRateBp: 1200, stockCases: 340,
+    imageUrl: null,
     schemes: [{ type: "FREE_GOODS", buyQty: 10, freeQty: 1, label: "Buy 10 cases get 1 free" }],
   },
   {
     id: "detergent", code: "SKU-DT-1KG", name: "Detergent", nameHi: null, brand: "B",
     piecesPerCase: 20, unitPricePaise: 10150, casePricePaise: 203000, gstRateBp: 1800, stockCases: 85,
+    imageUrl: null,
     schemes: [{ type: "SLAB_PERCENT", minQty: 5, percentBp: 300, label: "3% off 5 or more cases" }],
   },
   {
     id: "tea", code: "SKU-TE-250", name: "Tea", nameHi: null, brand: "C",
     piecesPerCase: 40, unitPricePaise: 11800, casePricePaise: 472000, gstRateBp: 1200, stockCases: 0,
+    imageUrl: null,
     schemes: [],
   },
 ];

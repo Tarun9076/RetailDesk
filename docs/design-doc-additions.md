@@ -62,6 +62,19 @@ Order queue, order detail, confirm, release a hold, cancel (reason required), ch
 - Add: "Getting Tally to write the balance CSV by itself every night: about half a day, done on the client's side with Tally's scheduling or an ODBC export." 
 - Add: "A second approver for credit releases and role levels inside the desk: about 1 day."
 
+## 8. UI and design decisions: replace the table's first rows with these
+
+| Constraint | What I did |
+| --- | --- |
+| Minimal and restrained | White, near-black ink and **one green**. Green marks only what you act on. The chosen filter is dark, not green. Amber and red only for a warning, always with words. No decoration that does no job. |
+| Fast catalogue with large images | Two large pictures across on a phone, five on a laptop. Each product is **drawn as a pack** from its own name (carton, pouch, bottle, tub, soap) in a muted colour that belongs to its product line, so similar products are told apart by sight. This costs **no image download** and a new product looks right at once. The desk can add a photo address; it is shown large and falls back to the drawing. |
+| Clear prices | **The price comes first**, directly under the picture, so prices line up across a row and compare at a glance. Then the name, then one line each for GST (always stated), the piece price, the scheme, and stock only when low or out. |
+| Quick cart | Add becomes a quantity bar in place. One rounded cart bar floats at the bottom with the count and total. In the cart, **Place order** stays at the bottom of the screen under the thumb with the total on it. Notes are folded away. |
+| Less at the top | The shop's name, the language switch and one menu (Download app, Sign out). |
+| Clear type | The phone's own fonts, one scale (24 px titles, 20 px prices, 15 px names, 12 px detail), tabular figures so prices align. |
+
+Checked at 320, 390 and 1280 px in English and Hindi with no sideways scrolling. A first load is about 210 KB compressed with no image downloads. [A54, A55, A56]
+
 ## 12. Assumptions: add
 
-A48 to A53 are in `docs/scope.md`.
+A48 to A56 are in `docs/scope.md`.

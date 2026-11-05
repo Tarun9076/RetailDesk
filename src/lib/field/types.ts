@@ -13,6 +13,7 @@ export interface FieldSku {
   pricePaise: number; // dealer price per piece, GST-exclusive
   gstRateBp: number;
   stockCases: number;
+  imageUrl: string | null;
   schemes: SchemeRule[];
 }
 
@@ -62,6 +63,7 @@ export function catalogueForShop(skus: FieldSku[], shop: FieldShop): CatalogueIt
       casePricePaise: unitPricePaise * s.piecesPerCase,
       gstRateBp: s.gstRateBp,
       stockCases: s.stockCases,
+      imageUrl: s.imageUrl ?? null,
       schemes: s.schemes,
     };
   });

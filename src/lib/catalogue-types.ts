@@ -15,5 +15,7 @@ export interface CatalogueItem {
   casePricePaise: number;
   gstRateBp: number;
   stockCases: number;
+  /** The desk's photo of the product (an https address), or null: a drawn pack is shown instead. */
+  imageUrl: string | null;
   schemes: SchemeRule[]; // currently live schemes only, without dates; the engine applies the best one
 }

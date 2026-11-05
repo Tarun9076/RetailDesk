@@ -15,14 +15,15 @@ export function LanguageToggle({ lang, onChoose }: { lang: Lang; onChoose?: (nex
     else router.refresh();
   }
 
-  const base = "min-h-11 min-w-11 px-3 text-sm font-medium rounded-full transition-colors";
+  // A quiet two-way switch: the chosen language is a white chip, the other is plain text.
+  const base = "min-h-10 min-w-10 rounded-full px-2.5 text-[13px] font-medium transition-colors";
   return (
-    <div role="group" aria-label="Language" className="inline-flex rounded-full border border-line bg-bg p-0.5">
+    <div role="group" aria-label="Language" className="inline-flex items-center rounded-full bg-surface p-0.5">
       <button
         type="button"
         onClick={() => choose("en")}
         aria-pressed={lang === "en"}
-        className={`${base} ${lang === "en" ? "bg-accent text-white" : "text-muted"}`}
+        className={`${base} ${lang === "en" ? "bg-bg text-ink shadow-sm" : "text-muted"}`}
       >
         EN
       </button>
@@ -30,7 +31,8 @@ export function LanguageToggle({ lang, onChoose }: { lang: Lang; onChoose?: (nex
         type="button"
         onClick={() => choose("hi")}
         aria-pressed={lang === "hi"}
-        className={`${base} ${lang === "hi" ? "bg-accent text-white" : "text-muted"}`}
+        lang="hi"
+        className={`${base} ${lang === "hi" ? "bg-bg text-ink shadow-sm" : "text-muted"}`}
       >
         हिं
       </button>

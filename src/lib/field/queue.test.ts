@@ -12,7 +12,7 @@ import {
 import { catalogueForShop, creditLeftPaise, type FieldShop, type FieldSku } from "./types";
 
 const biscuit: FieldSku = {
-  id: "b", code: "B", name: "Biscuit", nameHi: null, brand: "A", piecesPerCase: 96, pricePaise: 810, gstRateBp: 1200, stockCases: 340,
+  id: "b", code: "B", name: "Biscuit", nameHi: null, brand: "A", piecesPerCase: 96, pricePaise: 810, gstRateBp: 1200, stockCases: 340, imageUrl: null,
   schemes: [{ type: "FREE_GOODS", buyQty: 10, freeQty: 1, label: "Buy 10 get 1" }],
 };
 const shop = (over: Partial<FieldShop> = {}): FieldShop => ({

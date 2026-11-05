@@ -28,7 +28,7 @@ export function DownloadAppButton({
   variant = "header",
 }: {
   t: Dict["install"];
-  variant?: "header" | "block";
+  variant?: "header" | "block" | "menu";
 }) {
   const { known, installed, canPrompt, platform, prompt } = useInstall();
   const [open, setOpen] = useState(false);
@@ -55,14 +55,16 @@ export function DownloadAppButton({
   const trigger =
     variant === "block"
       ? "flex min-h-14 w-full items-center justify-center gap-2 rounded-xl border border-accent px-5 text-base font-medium text-accent hover:bg-accent-soft"
-      : "flex min-h-11 items-center justify-center gap-2 rounded-full px-3 text-sm font-medium text-accent hover:bg-accent-soft sm:border sm:border-accent/30 sm:px-4";
+      : variant === "menu"
+        ? "flex min-h-12 w-full items-center gap-3 px-4 text-left text-[15px] text-ink hover:bg-surface"
+        : "flex min-h-11 items-center justify-center gap-2 rounded-full px-3 text-sm font-medium text-accent hover:bg-accent-soft sm:border sm:border-accent/30 sm:px-4";
 
   return (
     <>
       {/* aria-label keeps the name when the text is hidden on a narrow phone */}
       <button type="button" onClick={onClick} className={trigger} aria-haspopup="dialog" aria-label={t.download}>
-        <Download size={18} aria-hidden />
-        <span className={variant === "block" ? "" : "hidden sm:inline"}>{t.download}</span>
+        <Download size={18} aria-hidden className={variant === "menu" ? "text-muted" : ""} />
+        <span className={variant === "header" ? "hidden sm:inline" : ""}>{t.download}</span>
       </button>
 
       {open && (

@@ -89,6 +89,7 @@ export default async function ProductPage(props: PageProps<"/desk/catalogue/[id]
               code: sku.code,
               name: sku.name,
               nameHi: sku.nameHi ?? "",
+              imageUrl: sku.imageUrl ?? "",
               brand: sku.brand,
               piecesPerCase: sku.piecesPerCase,
               pricePaise: sku.pricePaise,

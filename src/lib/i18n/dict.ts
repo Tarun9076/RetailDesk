@@ -2,7 +2,7 @@ export type Lang = "en" | "hi";
 export const LANG_COOKIE = "rd_lang";
 
 const en = {
-  common: { appName: "RetailDesk", signOut: "Sign out" },
+  common: { appName: "RetailDesk", signOut: "Sign out", menu: "Menu" },
   login: {
     title: "Sign in",
     subtitle: "Enter your shop's mobile number to get a code.",
@@ -132,6 +132,7 @@ const en = {
     add: "Add",
     freeCases: "{n} free",
     cases: "cases",
+    caseOne: "case",
     inCart: "In cart",
     viewCart: "View cart",
     items: "{n} items",
@@ -191,7 +192,7 @@ const en = {
 export type Dict = typeof en;
 
 const hi: Dict = {
-  common: { appName: "RetailDesk", signOut: "साइन आउट" },
+  common: { appName: "RetailDesk", signOut: "साइन आउट", menu: "मेन्यू" },
   login: {
     title: "साइन इन",
     subtitle: "कोड पाने के लिए अपनी दुकान का मोबाइल नंबर डालें।",
@@ -321,6 +322,7 @@ const hi: Dict = {
     add: "जोड़ें",
     freeCases: "{n} मुफ़्त",
     cases: "पेटी",
+    caseOne: "पेटी",
     inCart: "कार्ट में",
     viewCart: "कार्ट देखें",
     items: "{n} आइटम",

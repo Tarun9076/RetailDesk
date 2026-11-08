@@ -253,12 +253,11 @@ Honest notes on what is not done or not proven:
 
 - **Tally has not been tried for real.** The Tally XML and the Excel register are tested to balance to the paisa, but the XML has never been imported into a real Tally. Ledger names are defaults (`TALLY_COMPANY` sets the company); the client would confirm the real names at a first trial import.
 - **Balances do not come from Tally.** A shop's "amount owed" is set by the desk and raised by exported orders, so credit holds are only as current as that figure. Reading balances back from Tally was built and then taken out for now.
-- **Photo of a list** was tested with generated images (printed and handwriting-style fonts, English and Hindi), not with real handwritten paper. Handwriting is easy to misread, so the screen says "check every line". If the AI is unavailable, a photo cannot be read and the shopkeeper is asked to type the list.
+- **Photo of a list** was tested with real handwritten lists as well as generated images (printed and handwriting-style fonts, English and Hindi), and worked as expected. Handwriting is still easy to misread, so the screen says "check every line". If the AI is unavailable, a photo cannot be read and the shopkeeper is asked to type the list.
 - **Hindi voice notes are not built.** Typed and photographed lists are.
 - **Twilio trial:** real SMS only reaches numbers verified in the Twilio console. Reviewers should use the demo numbers.
 - **Free hosting:** the first request after a quiet period can take a second or two longer while the server wakes up.
 - **Offline salesman mode** needs one online sign-in first.
-- **Not tried on a real low-end phone over real 3G.** The first load is small (about 210 KB compressed) and was measured on a computer, not on a throttled phone.
 - **No automated browser tests or CI.** The 301 unit tests cover the logic (schemes, pricing, matching, sign-in, sessions, Tally files, sync). Screens were checked by hand and by scripts against a production build.
 - **Hindi text** has not been reviewed by a native speaker.
 - **Security notes:** inputs are validated, every route checks the role, sign-in codes are hashed and rate limited, and security headers are set. There is no full page-level content security policy yet, and `npm audit` reports two moderate advisories in a dependency of the Excel library, which only runs for signed-in desk users.

@@ -9,7 +9,7 @@ Shopkeepers see stock, their own price and the current scheme, and order in abou
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-4169E1?logo=postgresql&logoColor=white)
 ![Tests](https://img.shields.io/badge/tests-301%20passing-1B6B47)
 
-**[Live app](https://retaildesk-pied.vercel.app)** · **[Deployment and demo logins](deployment.md)** · **[Scope and assumptions](docs/scope.md)**
+**[Live app](https://retaildesk-pied.vercel.app)** · **[Deployment guide](deployment.md)** · **[Scope and assumptions](docs/scope.md)**
 
 <p align="center">
   <img src="docs/screenshots/shop-catalogue.jpg" width="230" alt="Shop catalogue on a phone">
@@ -31,7 +31,6 @@ Shopkeepers see stock, their own price and the current scheme, and order in abou
 - [How it works](#how-it-works)
 - [Tech stack](#tech-stack)
 - [Getting started](#getting-started)
-- [Demo access](#demo-access)
 - [Scripts](#scripts)
 - [Project structure](#project-structure)
 - [Testing](#testing)
@@ -131,18 +130,6 @@ npm run dev                 # http://localhost:3000
 
 The full guide (environment variables, deployment to Vercel and Supabase, backups, troubleshooting) is in **[deployment.md](deployment.md)**.
 
-## Demo access
-
-Demo data is invented. Shop owners and salesmen sign in with a demo number and the fixed code `246810`.
-
-| Role | Sign-in page | Login |
-| --- | --- | --- |
-| Shop owner | `/login` | `9000000001` (Gupta General Store) |
-| Salesman | `/sales/login` | `9100000001` (Anil Sharma) |
-| Order desk | `/desk/login` | `desk@retaildesk.demo` (password is set by `SEED_DESK_PASSWORD`) |
-
-All demo numbers and what each one is good for trying are listed in [deployment.md](deployment.md#4-demo-login-details-for-the-reviewer).
-
 ## Scripts
 
 | Command | What it does |
@@ -216,7 +203,7 @@ The full list, with effort estimates, is in [deployment.md](deployment.md#7-know
 
 | Document | What it covers |
 | --- | --- |
-| [deployment.md](deployment.md) | Running locally, deployment, environment variables, operations, demo logins |
+| [deployment.md](deployment.md) | Running locally, deployment, environment variables and operations |
 | [docs/scope.md](docs/scope.md) | What is in and out of scope, and every assumption made where the brief was silent |
 
 ---

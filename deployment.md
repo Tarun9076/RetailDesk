@@ -8,9 +8,23 @@
 
 Built by Tarun. No secrets are in the repository: `.env` is ignored by git, and this file lists variable **names** only.
 
+**Contents:** [1. Try it in five minutes](#1-try-it-in-five-minutes) · [2. Run it locally](#2-run-it-locally) · [3. How it is deployed](#3-how-it-is-deployed) · [4. Environment variables](#4-environment-variables-names-only) · [5. Product photos](#5-product-photos) · [6. Running the live system](#6-running-the-live-system) · [7. Demo logins](#7-demo-logins) · [8. Known limits](#8-known-limits) · [9. If something does not work](#9-if-something-does-not-work)
+
 ---
 
-## 1. Run it locally
+## 1. Try it in five minutes
+
+Use the live app and the demo logins in [section 7](#7-demo-logins). The demo data is invented, except the three products, prices, stock and schemes that came from the client's brief.
+
+1. **Order as a shop** (`/login`, number `9000000001`, code `246810`). Open the catalogue: large product pictures, the price first, GST always stated, the scheme under the product, stock only when low. Add 10 cases of *Glucose biscuit 75 g* and see the free case appear (**buy 10, get 1 free**). Add 5 or more *Detergent powder 1 kg* to see **3% off**. *Tea leaf 250 g* is out of stock (0 cases, as in the brief).
+2. **Order by message.** On the *Order by message* tab, press the example `bhaiya 5 peti biscuit chhota, 2 peti washing powder 1 kilo, chai patti 250 wala 1 peti`, or use **Photo of your list** with a photo or screenshot of a list. Each line shows the original words, a confidence level and alternatives. Nothing is ordered until you confirm.
+3. **Credit hold.** Sign in as `9000000002` (Yadav Kirana, almost at the credit limit) and place a larger order. It goes **on hold** instead of being rejected.
+4. **Order desk** (`/desk/login`). Open the queue, release the held order, confirm orders, then try **Export** (Excel sales register or Tally XML), the **Loading list** (what to load on each van), **Dashboard**, and **Shops** (shops with no order in 14 days).
+5. **Salesman offline** (`/sales/login`, number `9100000001`). Open *My shops* once while online, switch the phone to airplane mode, and keep taking orders. They send themselves when the signal returns.
+
+---
+
+## 2. Run it locally
 
 You need **Node.js 20 or newer** and a free **Supabase** account (any Postgres works).
 
@@ -21,25 +35,38 @@ npm install            # also generates the Prisma client
 cp .env.example .env   # PowerShell: Copy-Item .env.example .env
 ```
 
-Fill in `.env` (the names are in section 3). Then create the tables, add the demo data, and start:
+Fill in `.env` (the names and what each is for are in [section 4](#4-environment-variables-names-only)). For a quick local run you need only `DATABASE_URL`, `DIRECT_URL`, `SESSION_SECRET`, `SEED_DESK_PASSWORD`, and for sign-in without real SMS:
+
+```
+SMS_PROVIDER=console
+OTP_TEST_NUMBERS=+919000000001,+919000000002,+919000000003,+919000000004,+919000000005,+919000000006,+919000000007,+919100000001
+OTP_TEST_CODE=246810
+```
+
+Then create the tables, add the demo data and start:
 
 ```bash
 npm run db:deploy      # applies the migrations in prisma/migrations
-npm run db:seed        # demo data: 12 products, 7 shops, 18 salesmen, a desk user, ~105 orders
+npm run db:seed        # demo data: 12 products, 7 shops, 18 salesmen, a desk user, about 105 orders
 npm run dev            # http://localhost:3000
 ```
 
-Useful extras:
+Checks:
 
 ```bash
-npm test               # 226 unit tests (Vitest)
+npm test               # 301 unit tests in 22 files (Vitest)
+npx tsc --noEmit       # type check
 npm run lint
 npm run build && npm start   # production build; the offline salesman mode and service worker only run in this mode
 ```
 
-`npm run db:seed` can be run again at any time. It wipes and recreates the demo data.
+Notes:
 
-## 2. How it is deployed
+- `npm run db:seed` can be run again at any time. It **wipes and recreates the demo data** (including any orders you made). It links product photos again from `public/products`.
+- Without `GEMINI_API_KEY`, *Order by message* still works with a simpler built-in reader, but **photo of a list** needs the key.
+- With `SMS_PROVIDER=console`, a code for a number that is not in `OTP_TEST_NUMBERS` is printed in the terminal running the app. This mode is refused in production.
+
+## 3. How it is deployed
 
 | Part | Where | Notes |
 | --- | --- | --- |
@@ -47,26 +74,33 @@ npm run build && npm start   # production build; the offline salesman mode and s
 | Region | Vercel function region **Mumbai (`bom1`)**, set in `vercel.json` | Same region as the database. Measured round trip to the database from India is about 33 ms; from a US region it was 200+ ms per query. |
 | Database | **Supabase Postgres** | The app connects through the **transaction pooler** (port 6543). Vercel cannot use the direct connection, which is IPv6 only. |
 | Migrations and seed | Run **from a developer machine**, against the direct connection (port 5432) | `npm run db:deploy`, then `npm run db:seed`. They are not part of the Vercel build. |
+| Product photos | **Static files in the repo** (`public/products`) | Served by Vercel's network with a one-year cache. See [section 5](#5-product-photos). |
 | SMS | **Twilio** (Programmable Messaging) | A real SMS is sent for any number that is not a demo number. |
-| AI | **Google Gemini** | Used only to read an order message into lines. |
+| AI | **Google Gemini** | Reads an order message or a photo of a list into lines. Pictures are not stored. |
 
 Steps to repeat the deployment:
 
 1. Create a Supabase project (choose the region nearest your users).
 2. From a local checkout with the **direct** string in `DIRECT_URL`, run `npm run db:deploy` and `npm run db:seed`.
-3. In Vercel, import the GitHub repo. The framework is detected as Next.js; the default build command (`next build`) is used.
+3. In Vercel, import the GitHub repo. The framework is detected as Next.js; the default build command (`next build`) is used. No other build settings are needed.
 4. Add the environment variables below in **Settings → Environment Variables** (Production). Set `DATABASE_URL` to the Supabase **pooler** string.
 5. Redeploy. Vercel applies new variables only to new deployments.
+6. Open `https://<your-app>/api/health`. It should answer `{"status":"ok","database":"ok",...}`.
 
-## 3. Environment variables (names only)
+**Releasing a change:** commit and push to `main`. If a release changes the database, run `npm run db:deploy` from your machine against the direct connection **before** the push, so the new code never runs against old tables.
+
+## 4. Environment variables (names only)
+
+Never commit values. Locally they go in `.env`; on Vercel in *Settings → Environment Variables*.
+
+**The running app**
 
 | Name | Required | What it is for |
 | --- | --- | --- |
 | `DATABASE_URL` | Yes | Connection the running app uses. On Vercel, the Supabase **transaction pooler** string (port 6543) |
-| `DIRECT_URL` | Yes | Direct connection (port 5432) used by the Prisma CLI for migrations and by the seed |
+| `DIRECT_URL` | Yes (local) | Direct connection (port 5432) used by the Prisma CLI for migrations and by the seed |
 | `SESSION_SECRET` | Yes | Signs login cookies and hashes one-time codes. 32 or more random characters |
-| `SEED_DESK_PASSWORD` | To seed | Password given to the demo desk user when the seed runs. Not read by the running app |
-| `GEMINI_API_KEY` | For AI order capture | Google Gemini key. Without it the app falls back to a simple built-in reader |
+| `GEMINI_API_KEY` | For AI capture | Google Gemini key. Without it, typed messages use a simple built-in reader and **photo capture is unavailable** |
 | `GEMINI_MODEL` | Optional | Primary model, default `gemini-flash-latest` |
 | `GEMINI_FALLBACK_MODEL` | Optional | Tried in parallel if the first is busy, default `gemini-flash-lite-latest` |
 | `SMS_PROVIDER` | Yes | `twilio` on the live site. `console` prints codes to the server log (refused in production) |
@@ -78,10 +112,35 @@ Steps to repeat the deployment:
 | `TALLY_COMPANY` | Optional | Company name written into the Tally XML export. Default: a placeholder |
 | `ALERT_WEBHOOK_URL` | Optional | Slack or Discord webhook address (https). The server posts a short message there when it fails. Empty = off |
 
-## 3a. Running the live system
+**Only for command-line scripts (not needed on Vercel)**
+
+| Name | Used by | What it is for |
+| --- | --- | --- |
+| `SEED_DESK_PASSWORD` | `npm run db:seed` | Password given to the demo desk user (8+ characters). Not read by the running app |
+| `DESK_EMAIL`, `DESK_NEW_PASSWORD` | `npm run desk:reset` | Which desk account to reset, and its new temporary password |
+| `BACKUP_DIR` | `npm run db:backup` | Where the backup file is written (default `backups/`) |
+| `RESTORE_DATABASE_URL` | `npm run db:restore` | The **empty** database to restore into. Separate on purpose, so it cannot touch the live database |
+| `RESTORE_SCHEMA` | `npm run db:restore` | Optional: restore into a separate schema to practise |
+
+## 5. Product photos
+
+The catalogue shows a drawn pack for every product until it has a photo. Photos are resized to 480 px WebP files of about 10 KB so the catalogue stays fast on 3G.
+
+1. Put one photo per product in a `product-photos/` folder (not committed), named by product code, for example `product-photos/SKU-BS-075.jpg`. JPG, PNG or WebP, any size.
+2. Preview, then run:
+   ```bash
+   npm run photos -- --dry
+   npm run photos
+   ```
+   This writes small files to `public/products/` and links them to the products in the database.
+3. Commit `public/products/` and push, so Vercel serves them.
+
+Photos are named with a hash of their content, so a replaced photo gets a new address and is never shown stale. After `npm run db:seed`, photos already in `public/products` are linked again automatically. Eleven of the twelve products have a photo; *Detergent powder 500 g* shows its drawn pack.
+
+## 6. Running the live system
 
 **Watching it.**
-- **Errors:** every server problem is stored once per kind with a count (in the `ErrorLog` table) and, if `ALERT_WEBHOOK_URL` is set, sent to your chat channel. Vercel's own logs also show them.
+- **Errors:** every server problem is stored once per kind with a count (in the `ErrorLog` table) and, if `ALERT_WEBHOOK_URL` is set, sent to your chat channel. Vercel's own logs also show them. A page that breaks shows the shopkeeper a short message with a reference number that matches the log.
 - **Uptime:** point a free monitor (for example UptimeRobot, 5-minute checks) at `https://<your-app>/api/health`. It returns 200, or 503 when the database cannot be reached, and nothing else.
 
 **Backups.** Do both; neither replaces the other.
@@ -96,11 +155,11 @@ DIRECT_URL=<the new database> npm run db:deploy
 RESTORE_DATABASE_URL=<the new database> npm run db:restore -- backups/retaildesk-<date>.json.gz
 # 3. point DATABASE_URL and DIRECT_URL at it
 ```
-The restore refuses a database that already has rows, and uses its own variable so it cannot touch the live database by accident. It was practised by restoring a real backup into a separate schema and comparing every row of every table with the live data.
+The restore refuses a database that already has rows. It was practised by restoring a real backup into a separate schema and comparing every row of every table with the live data.
 
-**Locked out of the desk?** `DESK_EMAIL=<email> DESK_NEW_PASSWORD='<a long password>' npm run desk:reset` sets a password; the person is asked to choose their own at the next sign-in.
+**Locked out of the desk?** `DESK_EMAIL=<email> DESK_NEW_PASSWORD='<a long password>' npm run desk:reset` sets a password; the person is asked to choose their own at the next sign-in. (On Windows PowerShell, set the two variables with `$env:NAME = "value"` first, then run the command.)
 
-## 4. Demo logins
+## 7. Demo logins
 
 The seeded phone numbers are fake, so no SMS can reach them. `OTP_TEST_NUMBERS` and `OTP_TEST_CODE` let them sign in with one fixed code. Real numbers always get a real SMS (the Twilio account is a trial one, so it can only text numbers verified in Twilio).
 
@@ -127,16 +186,44 @@ The seeded phone numbers are fake, so no SMS can reach them. `OTP_TEST_NUMBERS` 
 | 9100000003 | Chetan Rathore | Soni, Tiwari |
 | 9100000004 to 9100000018 | The other fifteen salesmen | None yet (the desk assigns shops) |
 
-To see offline mode, open **My shops** once with a connection, then turn on airplane mode and keep working. Orders are saved on the phone and sent when the signal returns.
+To see offline mode, open **My shops** once with a connection, then turn on airplane mode and keep working. Orders are saved on the phone and sent when the signal returns. The salesman app has an English / Hindi switch.
 
 ### Order desk: `/desk/login`
 
 - Email: `desk@retaildesk.demo`
 - Password: `[FILL IN BEFORE SENDING: the value used for SEED_DESK_PASSWORD]`
 
-## 5. Known limits of the live demo
+The desk is English only. The **Staff** tab lets a signed-in desk user add colleagues, who must choose their own password at first sign-in.
 
+## 8. Known limits
+
+Honest notes on what is not done or not proven:
+
+- **Tally has not been tried for real.** The Tally XML and the Excel register are tested to balance to the paisa, but the XML has never been imported into a real Tally. Ledger names are defaults (`TALLY_COMPANY` sets the company); the client would confirm the real names at a first trial import.
+- **Balances do not come from Tally.** A shop's "amount owed" is set by the desk and raised by exported orders, so credit holds are only as current as that figure. Reading balances back from Tally was built and then taken out for now.
+- **Photo of a list** was tested with generated images (printed and handwriting-style fonts, English and Hindi), not with real handwritten paper. Handwriting is easy to misread, so the screen says "check every line". If the AI is unavailable, a photo cannot be read and the shopkeeper is asked to type the list.
+- **Hindi voice notes are not built.** Typed and photographed lists are.
 - **Twilio trial:** real SMS only reaches numbers verified in the Twilio console. Reviewers should use the demo numbers above.
 - **Free hosting:** the first request after a quiet period can take a second or two longer while the server wakes up.
 - **Offline salesman mode** needs one online sign-in first, and works best when the app is installed to the home screen (use the **Download app** button).
+- **Not tried on a real low-end phone over real 3G.** The first load is small (about 210 KB compressed) and was measured on a computer, not on a throttled phone.
+- **No automated browser tests or CI.** The 301 unit tests cover the logic (schemes, pricing, matching, sign-in, sessions, Tally files, sync). Screens were checked by hand and by scripts against a production build.
+- **Hindi text** has not been reviewed by a native speaker.
+- **Security notes:** inputs are validated, every route checks the role, sign-in codes are hashed and rate limited, and security headers are set. There is no full page-level content security policy yet, and `npm audit` reports two moderate advisories in a dependency of the Excel library, which only runs for signed-in desk users.
+- **Backups:** Supabase's own backups depend on the plan, which I did not check; the command-line backup is the one I tested.
 - The demo data is invented. Resetting it is one command: `npm run db:seed`.
+
+## 9. If something does not work
+
+| What you see | Likely cause and fix |
+| --- | --- |
+| `npm install` ok but the app says the Prisma client is missing | Run `npm run db:generate` |
+| `Can't reach database server` | Check `DATABASE_URL` and `DIRECT_URL`. Locally use the direct string (5432); on Vercel the pooler (6543) |
+| `Set SEED_DESK_PASSWORD (8+ characters)` | Add it to `.env` before `npm run db:seed` |
+| No code arrives | Use a demo number with `246810`. For other numbers `SMS_PROVIDER` must be `twilio` and the number verified in the trial account |
+| `SMS_PROVIDER=console` refused | That mode is blocked when `NODE_ENV=production`. Use `npm run dev` locally |
+| *Order by message* says it used a simpler method | `GEMINI_API_KEY` is missing, the model is busy, or the quota is used up |
+| Photo of a list says it could not be read right now | The same causes, or a slow connection. Typing the list always works |
+| Products show drawings, not photos | The photo is not committed or not linked: see [section 5](#5-product-photos) |
+| Offline mode does nothing | Use the production build (`npm run build && npm start`) or the live site; the service worker does not run in `npm run dev` |
+| `/api/health` returns 503 | The database cannot be reached. Check Supabase and `DATABASE_URL` |

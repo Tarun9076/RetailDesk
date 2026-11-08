@@ -4,6 +4,7 @@
  * Re-running wipes and recreates all rows.
  */
 import "dotenv/config";
+import { existsSync, readdirSync } from "node:fs";
 import argon2 from "argon2";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, type Sku } from "../src/generated/prisma/client";
@@ -19,6 +20,14 @@ if (!deskPassword || deskPassword.length < 8) {
 }
 
 const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: url }) });
+
+// Photos already resized into public/products (see `npm run photos`) are linked again after a re-seed,
+// so wiping the demo data never drops the pictures. A product with no photo keeps its drawn pack.
+const PHOTOS = existsSync("public/products") ? readdirSync("public/products") : [];
+const photoFor = (code: string) => {
+  const file = PHOTOS.find((f) => f.startsWith(`${code}-`) && f.endsWith(".webp"));
+  return file ? `/products/${file}` : null;
+};
 
 const rupees = (r: number) => Math.round(r * 100);
 const DAY = 86_400_000;
@@ -123,7 +132,7 @@ async function main() {
       data: {
         code: s.code, name: s.name, nameHi: s.nameHi, brand: s.brand,
         piecesPerCase: s.piecesPerCase, pricePaise: rupees(s.price),
-        gstRateBp: s.gstRateBp, stockCases: s.stockCases,
+        gstRateBp: s.gstRateBp, stockCases: s.stockCases, imageUrl: photoFor(s.code),
         schemes: s.scheme
           ? { create: s.scheme.type === "FREE_GOODS"
               ? { type: "FREE_GOODS", buyQty: s.scheme.buyQty, freeQty: s.scheme.freeQty, label: s.scheme.label }

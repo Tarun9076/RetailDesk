@@ -22,6 +22,12 @@ const nextConfig: NextConfig = {
     return [
       { source: "/:path*", headers: securityHeaders },
       {
+        // Product photos are named with a hash of their content (see scripts/photos.ts), so a
+        // changed photo gets a new address and the old one can be cached for a year.
+        source: "/products/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+      {
         // The worker must always be re-checked so an update reaches phones quickly.
         source: "/sw.js",
         headers: [

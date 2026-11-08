@@ -1,5 +1,6 @@
 // Request shapes for the catalogue API. Money arrives in paise (the form converts rupees first).
 import { z } from "zod";
+import { OWN_PHOTO } from "@/lib/product-look";
 import { GST_RATES_BP } from "./rules";
 
 const gst = z.number().int().refine((n) => (GST_RATES_BP as readonly number[]).includes(n), "Unknown GST rate");
@@ -9,7 +10,7 @@ const imageUrl = z
   .string()
   .trim()
   .max(400)
-  .refine((v) => v === "" || /^https:\/\/[^\s]+$/i.test(v), "The photo address must start with https://")
+  .refine((v) => v === "" || /^https:\/\/[^\s]+$/i.test(v) || OWN_PHOTO.test(v), "The photo address must start with https://")
   .nullable()
   .optional();
 

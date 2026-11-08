@@ -254,6 +254,7 @@ Names only. Put your values in `.env`.
 | `npm run db:deploy` | Apply database migrations (safe, non-interactive) |
 | `npm run db:migrate` | Create a new migration while developing a schema change |
 | `npm run db:seed` | Wipe and refill the demo data. **Never run this on a database with real orders** |
+| `npm run photos` | Turn the photos in `product-photos/` (named by product code, e.g. `SKU-BS-075.jpg`) into 480 px WebP files of about 10 KB in `public/products/` and link them to the products. `-- --dry` shows what it would do |
 | `npm run db:backup` | Save every business table, with desk password hashes, to `backups/retaildesk-<date>.json.gz` (ignored by git; store it like a password) |
 | `npm run db:restore -- <file>` | Load a backup into an **empty** database named by `RESTORE_DATABASE_URL`. Refuses if any table has rows |
 | `npm run desk:reset` | Set a desk password from the command line when everyone is locked out (`DESK_EMAIL` and `DESK_NEW_PASSWORD`) |

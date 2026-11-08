@@ -55,9 +55,13 @@ export function splitProductName(name: string): ProductTitle {
   return { title: name.slice(0, i).trim(), detail: name.slice(i + 1).trim() };
 }
 
-/** An https picture address that is safe to show, or null. */
+/** The app's own resized photos live here, so they come from the same fast, cached domain. */
+export const OWN_PHOTO = /^\/products\/[A-Za-z0-9._-]{1,100}\.(webp|jpg|png)$/;
+
+/** A picture address that is safe to show (an https address or one of our own photos), or null. */
 export function safeImageUrl(url: string | null | undefined): string | null {
   if (!url) return null;
+  if (OWN_PHOTO.test(url)) return url;
   try {
     const u = new URL(url);
     return u.protocol === "https:" && url.length <= 400 ? u.toString() : null;

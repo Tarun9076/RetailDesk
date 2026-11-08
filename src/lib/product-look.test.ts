@@ -94,3 +94,15 @@ describe("a photo address", () => {
     expect(safeImageUrl("https://example.com/" + "a".repeat(400))).toBeNull();
   });
 });
+
+describe("the app's own photos", () => {
+  it("accepts a resized photo kept on the app's own domain", () => {
+    expect(safeImageUrl("/products/SKU-BS-075-1a2b3c4d.webp")).toBe("/products/SKU-BS-075-1a2b3c4d.webp");
+  });
+  it("refuses paths that climb out, other folders and odd file types", () => {
+    expect(safeImageUrl("/products/../secret.webp")).toBeNull();
+    expect(safeImageUrl("/other/a.webp")).toBeNull();
+    expect(safeImageUrl("/products/a.svg")).toBeNull();
+    expect(safeImageUrl("//evil.com/a.webp")).toBeNull();
+  });
+});

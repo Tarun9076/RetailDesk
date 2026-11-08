@@ -15,7 +15,7 @@ import { QtyStepper } from "./qty-stepper";
  * One product. The picture is large and the price is the loudest thing in the card; everything a
  * shopkeeper must know (GST, scheme, stock) is there in one short line each, and nothing else is.
  */
-export function ProductCard({ item, t }: { item: CatalogueItem; t: Dict["catalogue"] }) {
+export function ProductCard({ item, t, priority = false }: { item: CatalogueItem; t: Dict["catalogue"]; priority?: boolean }) {
   const { lang, qty, setQty, lineFor } = useCart();
   const n = qty[item.id] ?? 0;
   const line = lineFor(item.id);
@@ -27,7 +27,7 @@ export function ProductCard({ item, t }: { item: CatalogueItem; t: Dict["catalog
 
   return (
     <article className="flex flex-col" aria-label={title}>
-      <ProductImage name={item.name} brand={item.brand} imageUrl={item.imageUrl} dim={out} />
+      <ProductImage name={item.name} brand={item.brand} imageUrl={item.imageUrl} dim={out} priority={priority} />
 
       <div className="mt-3 flex flex-1 flex-col">
         {/* The price comes first, straight under the picture, so prices line up across a row and can be compared at a glance. */}

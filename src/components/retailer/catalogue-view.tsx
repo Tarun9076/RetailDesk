@@ -60,8 +60,9 @@ export function CatalogueView({ t }: { t: Dict["catalogue"] }) {
       ) : (
         // Two products across on a phone, so each picture is large; more as the screen grows.
         <div className="mt-5 grid grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-3 sm:gap-x-5 lg:grid-cols-4 xl:grid-cols-5">
-          {visible.map((item) => (
-            <ProductCard key={item.id} item={item} t={t} />
+          {visible.map((item, i) => (
+            // The first row is what the shopkeeper sees, so those photos are fetched straight away.
+            <ProductCard key={item.id} item={item} t={t} priority={i < 4} />
           ))}
         </div>
       )}

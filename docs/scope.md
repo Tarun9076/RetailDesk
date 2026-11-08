@@ -8,7 +8,7 @@
 - Hindi and English UI
 
 ## Cut (and why)
-- Voice notes and photo-of-list capture: same parser interface, extra input types; text first
+- Voice-note capture: same parser interface, extra input type (photo of a list is built)
 - Salesman mode and offline sync: needs a sync layer, not part of the core slice
 - 14-day no-order dashboard: built last if time allows
 - Real payments, delivery tracking, GST e-invoicing: out of scope in the brief
@@ -30,7 +30,7 @@
 - A14. The Tally file assumes intra-state sales (Jabalpur shops): GST is booked as half CGST and half SGST, per rate. Free goods are zero-value stock lines. Ledger names (Sales, Output CGST @6%, ...) and the stock unit "Case" are placeholders the client must confirm.
 - A15. The desk can release a credit hold on its own judgement. There is no second approver, but every release records who did it and when. Exported and cancelled orders are final.
 - A16. The desk screens are English only. The language switch is for shopkeepers.
-- A17. AI capture reads text only. Voice notes and photos of a handwritten list use the same pipeline (they would first be turned into text) but are not built. The AI reads the message into lines and may suggest up to two product codes as a hint; the app's own matcher makes the final choice and scores it.
+- A17. AI capture reads typed text and photos of a list (handwritten or printed). A Hindi voice note would use the same pipeline (turned into text first) but is not built. The photo is sent to the AI and not stored; only the words read from it are kept. The AI reads the message into lines and may suggest up to two product codes as a hint; the app's own matcher makes the final choice and scores it.
 - A18. The shop is only ever shown cases. If a message says pieces, the quantity is converted to whole cases and rounded up, and the shopkeeper sees that. A missing quantity or unit is asked, never assumed.
 - A19. Matching uses only that shop's own past orders and learned phrases. What one shop teaches the app never affects another shop.
 - A20. A correction is remembered when the shopkeeper (or desk) changes a guess, or picks on a line the app was unsure about. A swap away from an out-of-stock product is treated as a substitution and is not remembered.

@@ -67,3 +67,12 @@ Checked at 320, 390 and 1280 px in English and Hindi with no sideways scrolling.
 ## 12. Assumptions: add
 
 A48 to A56 are in `docs/scope.md`.
+
+## AI part: photo of a list (add to section 6 or wherever the AI capture is described)
+
+- A shopkeeper photographs a handwritten or printed list. The phone shrinks it to 1280 px first, so it uploads fast on 3G. The server checks the file is really a JPEG, PNG or WebP under 3 MB, limits reads per shop, and sends it to Gemini with the shop's catalogue.
+- The result goes through the **same review as typed text**: the original words, a confidence level, two alternatives, units asked and not guessed, and a person confirms before anything is ordered. Desk corrections become aliases for that shop.
+- **When it is wrong or unsure:** a blurry or wrong photo gives an empty review, not invented items. A product code the AI invents is ignored. A quantity that is not a whole number becomes a question. Instructions written inside the picture are ignored. If the AI is down there is no simpler fallback for a picture, so the shopkeeper is asked to type the list.
+- **Privacy:** the picture is not stored; only the words read from it are.
+- **Tests:** 9 unit tests, plus 14 live checks against a production build (sample list read as 5, 2 and 1 cases in about 4 s, blank photo, fake image, oversize, signed-out, other-site and desk-user requests, rate limit, an injected instruction, a Hindi Devanagari list).
+- **Still not built:** Hindi voice notes. Handwriting was tested with a handwriting-style font, not real paper notebooks, so please also try a real photo.

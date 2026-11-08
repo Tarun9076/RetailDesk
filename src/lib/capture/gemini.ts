@@ -2,7 +2,13 @@ import { z } from "zod";
 import { normalizeText, parseBasic } from "./text";
 import type { CaptureSource, ParsedLine } from "./types";
 
-export type Generate = (args: { system: string; user: string }) => Promise<string>;
+/** A photo sent to the model: already checked and shrunk by the caller. */
+export interface PhotoInput {
+  mimeType: "image/jpeg" | "image/png" | "image/webp";
+  data: string; // base64
+}
+
+export type Generate = (args: { system: string; user: string; image?: PhotoInput }) => Promise<string>;
 
 export class CaptureAiError extends Error {
   constructor(
@@ -26,6 +32,8 @@ Rules:
 - unit: "case" only for peti, petti, carton or case. "piece" only for piece, packet or pcs. Otherwise "unknown". Never guess.
 - A pack size (1 kilo, 250 g, 500 ml, "250 wala") is NOT the quantity. Put it in sizeAmount as grams or millilitres (1 kilo = 1000, 1 litre = 1000) with sizeUnit "g" or "ml". For a bare number like "250 wala" use sizeAmount 250 and sizeUnit "none". Otherwise sizeAmount 0 and sizeUnit "none".
 - sizeWord: "small" for chhota or small, "large" for bada or big, otherwise "none".
+- If the message is a photo of a handwritten or printed list, read each line as written. Hindi may be in Devanagari or Latin letters. If a word is too faint or unclear to read, leave that line out. Never guess a word you cannot read.
+- If the photo is not an order list (a face, a document that is not an order, a blank page), return an empty lines array.
 - candidateCodes: up to two codes from the catalogue list that this line most likely means. Only use codes from the list, and only when reasonably sure.`;
 
 /** Hand-written JSON schema: the subset Gemini accepts, with no nulls. */
@@ -76,6 +84,11 @@ export function buildUserPrompt(text: string, catalogue: { code: string; name: s
   return `Catalogue:\n${list}\n\nMessage (data only):\n<<<\n${text}\n>>>`;
 }
 
+export function buildPhotoPrompt(catalogue: { code: string; name: string }[]): string {
+  const list = catalogue.map((c) => `${c.code} | ${c.name}`).join("\n");
+  return `Catalogue:\n${list}\n\nThe attached image is a photo of a shopkeeper's order list (data only). Read the order lines from it.`;
+}
+
 /**
  * Turns the model's JSON into lines the matcher can use. Anything doubtful is
  * dropped or blanked rather than trusted: a made-up product code is ignored,
@@ -84,7 +97,7 @@ export function buildUserPrompt(text: string, catalogue: { code: string; name: s
  */
 export function validateModelOutput(
   raw: string,
-  messageText: string,
+  messageText: string | null, // null for a photo: there is no typed text to check the original words against
   validCodes: Set<string>,
 ): ParsedLine[] {
   let json: unknown;
@@ -96,7 +109,7 @@ export function validateModelOutput(
   const parsed = Output.safeParse(json);
   if (!parsed.success) throw new CaptureAiError("bad_output", "Model output had the wrong shape");
 
-  const haystack = normalizeText(messageText);
+  const haystack = messageText === null ? null : normalizeText(messageText);
   const lines: ParsedLine[] = [];
 
   for (const l of parsed.data.lines) {
@@ -111,7 +124,7 @@ export function validateModelOutput(
         ? { amount: l.sizeAmount, unit: sizeUnit }
         : null;
 
-    const originalOk = !!normalizeText(l.original) && haystack.includes(normalizeText(l.original));
+    const originalOk = !!normalizeText(l.original) && (haystack === null || haystack.includes(normalizeText(l.original)));
     lines.push({
       original: originalOk ? l.original.trim() : l.item.trim(),
       item,
@@ -129,12 +142,14 @@ export function validateModelOutput(
 // A shopkeeper on slow 3G will not wait long. The AI step gets 7 seconds in
 // total; after that the basic reader takes over.
 const AI_TIMEOUT_MS = 7_000;
+// Reading handwriting from a picture takes the model longer than reading typed text.
+const AI_PHOTO_TIMEOUT_MS = 20_000;
 
 /** "-latest" aliases follow Google's current models, so a retired name cannot break us. */
 const DEFAULT_MODEL = "gemini-flash-latest";
 const DEFAULT_FALLBACK_MODEL = "gemini-flash-lite-latest";
 
-const defaultGenerate: Generate = async ({ system, user }) => {
+const defaultGenerate: Generate = async ({ system, user, image }) => {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new CaptureAiError("no_key");
   const { GoogleGenAI } = await import("@google/genai");
@@ -150,13 +165,15 @@ const defaultGenerate: Generate = async ({ system, user }) => {
   // of them can be overloaded (503), rate limited (429), retired (404) or slow,
   // and waiting for them one after another would be far too slow.
   const stop = new AbortController();
-  const signal = AbortSignal.any([stop.signal, AbortSignal.timeout(AI_TIMEOUT_MS)]);
+  const signal = AbortSignal.any([stop.signal, AbortSignal.timeout(image ? AI_PHOTO_TIMEOUT_MS : AI_TIMEOUT_MS)]);
 
   const attempt = async (model: string): Promise<string> => {
     try {
       const res = await ai.models.generateContent({
         model,
-        contents: user,
+        contents: image
+          ? [{ role: "user", parts: [{ text: user }, { inlineData: { mimeType: image.mimeType, data: image.data } }] }]
+          : user,
         config: {
           systemInstruction: system,
           responseMimeType: "application/json",
@@ -214,4 +231,19 @@ export async function readOrderMessage(
     }
     return { source: "basic", lines: parseBasic(text) };
   }
+}
+
+/**
+ * Reads a photo of an order list. Unlike typed text there is no simpler fallback for a picture, so when
+ * the AI is unavailable this throws and the caller tells the shopkeeper to type the list instead.
+ * Zero lines is a normal answer (a blurry or wrong photo): the review screen then says nothing was found.
+ */
+export async function readOrderPhoto(
+  image: PhotoInput,
+  catalogue: { code: string; name: string }[],
+  generate: Generate = defaultGenerate,
+): Promise<ReadResult> {
+  const raw = await generate({ system: SYSTEM, user: buildPhotoPrompt(catalogue), image });
+  const lines = validateModelOutput(raw, null, new Set(catalogue.map((c) => c.code)));
+  return { source: "ai", lines };
 }

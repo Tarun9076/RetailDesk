@@ -2,7 +2,7 @@ import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
 import { loadCatalogue } from "@/lib/catalogue";
-import { readOrderMessage } from "./gemini";
+import { readOrderMessage, readOrderPhoto, type PhotoInput, type ReadResult } from "./gemini";
 import { aliasKey, matchLine, shouldLearnAlias } from "./match";
 import type { CaptureLineDto, CaptureSource, ConfidenceLevel } from "./types";
 
@@ -14,11 +14,8 @@ export interface StoredCapture {
   confirmed?: { index: number; skuId: string; qtyCases: number; original: string; level: ConfidenceLevel }[];
 }
 
-/**
- * Reads a pasted message for one retailer. Matching uses only that retailer's
- * own habits (their learned phrases and past orders), never another shop's.
- */
-export async function createCapture(retailerId: string, text: string) {
+/** What the matcher needs to know about one shop: its catalogue, its learned phrases and its history. */
+async function loadContext(retailerId: string) {
   const [items, aliasRows, historyRows] = await Promise.all([
     loadCatalogue(retailerId),
     db.alias.findMany({ where: { retailerId } }),
@@ -28,20 +25,26 @@ export async function createCapture(retailerId: string, text: string) {
       _count: { _all: true },
     }),
   ]);
-
-  const read = await readOrderMessage(
-    text,
-    items.map((i) => ({ code: i.code, name: i.name })),
-  );
-
-  const ctx = {
-    items: items.map((i) => ({ id: i.id, code: i.code, name: i.name, stockCases: i.stockCases })),
-    aliases: new Map(aliasRows.map((a) => [a.phrase, a.skuId])),
-    history: new Map(historyRows.map((h) => [h.skuId, h._count._all])),
+  return {
+    items,
+    catalogue: items.map((i) => ({ code: i.code, name: i.name })),
+    matchCtx: {
+      items: items.map((i) => ({ id: i.id, code: i.code, name: i.name, stockCases: i.stockCases })),
+      aliases: new Map(aliasRows.map((a) => [a.phrase, a.skuId])),
+      history: new Map(historyRows.map((h) => [h.skuId, h._count._all])),
+    },
   };
+}
 
+/** Matches what was read to this shop's products and saves it as a draft for the shopkeeper to check. */
+async function saveDraft(
+  retailerId: string,
+  rawText: string,
+  read: ReadResult,
+  matchCtx: Awaited<ReturnType<typeof loadContext>>["matchCtx"],
+) {
   const lines: CaptureLineDto[] = read.lines.map((l, index) => {
-    const m = matchLine(l, ctx);
+    const m = matchLine(l, matchCtx);
     return {
       index,
       original: l.original,
@@ -58,9 +61,31 @@ export async function createCapture(retailerId: string, text: string) {
 
   const stored: StoredCapture = { source: read.source, lines };
   const row = await db.aiCapture.create({
-    data: { retailerId, rawText: text, result: stored as unknown as Prisma.InputJsonValue },
+    data: { retailerId, rawText, result: stored as unknown as Prisma.InputJsonValue },
   });
   return { captureId: row.id, source: read.source, lines };
+}
+
+/**
+ * Reads a pasted message for one retailer. Matching uses only that retailer's
+ * own habits (their learned phrases and past orders), never another shop's.
+ */
+export async function createCapture(retailerId: string, text: string) {
+  const { catalogue, matchCtx } = await loadContext(retailerId);
+  const read = await readOrderMessage(text, catalogue);
+  return saveDraft(retailerId, text, read, matchCtx);
+}
+
+/**
+ * Reads a photo of a list the same way. The picture itself is never stored: only the words read from
+ * it are kept, so the desk can see what was understood. Throws if the AI cannot read it.
+ */
+export async function createPhotoCapture(retailerId: string, image: PhotoInput) {
+  const { catalogue, matchCtx } = await loadContext(retailerId);
+  const read = await readOrderPhoto(image, catalogue);
+  const words = read.lines.map((l) => l.original).join("\n").slice(0, 1500);
+  const rawText = words ? `Photo of a list:\n${words}` : "Photo of a list (nothing could be read)";
+  return saveDraft(retailerId, rawText, read, matchCtx);
 }
 
 export type ConfirmResult =

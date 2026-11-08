@@ -1,9 +1,10 @@
 "use client";
 
-import { Sparkles, Trash2, TriangleAlert } from "lucide-react";
+import { Camera, Sparkles, Trash2, TriangleAlert } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, ErrorNote } from "@/components/ui";
+import { shrinkPhoto } from "@/lib/capture/shrink";
 import type { CaptureLineDto, CaptureSource, ConfidenceLevel } from "@/lib/capture/types";
 import { fmt, type Dict } from "@/lib/i18n/dict";
 import { maxOrderableCases } from "@/lib/pricing/engine";
@@ -48,21 +49,42 @@ export function CaptureView({ t }: { t: Dict["capture"] }) {
   const [source, setSource] = useState<CaptureSource>("ai");
   const [lines, setLines] = useState<LineState[]>([]);
   const [saving, setSaving] = useState(false);
+  const [fromPhoto, setFromPhoto] = useState(false);
+  const photoInput = useRef<HTMLInputElement>(null);
   const slowTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => () => void (slowTimer.current && clearTimeout(slowTimer.current)), []);
 
-  async function read() {
+  /** The shopkeeper chose a picture: shrink it here, then send it for reading. */
+  async function readPhoto(file: File) {
+    setError(null);
+    let blob: Blob;
+    try {
+      blob = await shrinkPhoto(file);
+    } catch {
+      setError(t.errors.photoPrepare);
+      return;
+    }
+    const body = new FormData();
+    body.append("photo", blob, "list.jpg");
+    await read({ method: "POST", body }, true);
+  }
+
+  async function read(init?: RequestInit, photo = false) {
     setError(null);
     setSlow(false);
+    setFromPhoto(photo);
     setPhase("reading");
     slowTimer.current = setTimeout(() => setSlow(true), 4000);
     try {
-      const res = await fetch("/api/capture", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
+      const res = await fetch(
+        "/api/capture",
+        init ?? {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+        },
+      );
       const data = (await res.json().catch(() => ({}))) as {
         captureId?: string;
         source?: CaptureSource;
@@ -74,7 +96,9 @@ export function CaptureView({ t }: { t: Dict["capture"] }) {
         setError(
           data.error === "rate_limited"
             ? fmt(t.errors.rateLimited, { s: data.retryAfterSec ?? 60 })
-            : t.errors.failed,
+            : photo
+              ? t.errors.photo
+              : t.errors.failed,
         );
         setPhase("input");
         return;
@@ -164,10 +188,11 @@ export function CaptureView({ t }: { t: Dict["capture"] }) {
   }
 
   if (phase === "reading") {
+    const reading = fromPhoto ? t.photoReading : t.reading;
     return (
       <div className="flex flex-col items-center py-20 text-center" aria-live="polite">
         <Sparkles size={36} aria-hidden className="animate-pulse text-accent" />
-        <p className="mt-4 font-medium">{t.reading}</p>
+        <p className="mt-4 font-medium">{reading}</p>
         {slow && <p className="mt-1 text-sm text-muted">{t.readingSlow}</p>}
       </div>
     );
@@ -179,6 +204,32 @@ export function CaptureView({ t }: { t: Dict["capture"] }) {
         <h1 className="text-2xl font-semibold tracking-tight">{t.title}</h1>
         <p className="mt-2 text-muted">{t.intro}</p>
 
+        <input
+          ref={photoInput}
+          type="file"
+          accept="image/*"
+          className="sr-only"
+          tabIndex={-1}
+          aria-hidden
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            e.target.value = ""; // so the same photo can be chosen again
+            if (f) void readPhoto(f);
+          }}
+        />
+        <button
+          type="button"
+          onClick={() => photoInput.current?.click()}
+          className="mt-4 flex min-h-16 w-full items-center gap-3 rounded-2xl border border-accent px-4 text-left text-accent hover:bg-accent-soft"
+        >
+          <Camera size={24} aria-hidden className="shrink-0" />
+          <span>
+            <span className="block text-base font-medium">{t.photo}</span>
+            <span className="block text-sm text-muted">{t.photoHint}</span>
+          </span>
+        </button>
+        <p className="mt-5 text-center text-sm text-muted">{t.or}</p>
+
         <label htmlFor="msg" className="sr-only">
           {t.title}
         </label>
@@ -189,7 +240,7 @@ export function CaptureView({ t }: { t: Dict["capture"] }) {
           rows={7}
           lang={lang}
           placeholder={t.placeholder}
-          className="mt-4 w-full rounded-xl border border-line bg-bg px-4 py-3 text-base placeholder:text-muted/60 focus:border-accent"
+          className="mt-2 w-full rounded-xl border border-line bg-bg px-4 py-3 text-base placeholder:text-muted/60 focus:border-accent"
         />
         <div className="mt-1 flex items-center justify-between text-xs text-muted">
           <span>{text.length}/1500</span>
@@ -217,7 +268,7 @@ export function CaptureView({ t }: { t: Dict["capture"] }) {
           </div>
         )}
         <div className="mt-5">
-          <Button type="button" disabled={text.trim().length < 2} onClick={read}>
+          <Button type="button" disabled={text.trim().length < 2} onClick={() => read()}>
             {t.read}
           </Button>
         </div>
@@ -231,16 +282,16 @@ export function CaptureView({ t }: { t: Dict["capture"] }) {
       <h1 className="text-2xl font-semibold tracking-tight">{t.title}</h1>
       <p
         className={`mt-3 flex items-start gap-2 rounded-xl px-4 py-3 text-sm ${
-          source === "ai" ? "bg-accent-soft text-accent-strong" : "bg-amber-50 text-amber-900"
+          source === "ai" && !fromPhoto ? "bg-accent-soft text-accent-strong" : "bg-amber-50 text-amber-900"
         }`}
       >
-        {source === "ai" ? <Sparkles size={18} aria-hidden className="mt-0.5 shrink-0" /> : <TriangleAlert size={18} aria-hidden className="mt-0.5 shrink-0" />}
-        {source === "ai" ? t.aiNotice : t.basicNotice}
+        {source === "ai" && !fromPhoto ? <Sparkles size={18} aria-hidden className="mt-0.5 shrink-0" /> : <TriangleAlert size={18} aria-hidden className="mt-0.5 shrink-0" />}
+        {fromPhoto ? t.photoNotice : source === "ai" ? t.aiNotice : t.basicNotice}
       </p>
 
       {lines.length === 0 || active.length === 0 ? (
         <div className="py-12 text-center">
-          <p className="text-muted">{lines.length === 0 ? t.noLines : t.allRemoved}</p>
+          <p className="text-muted">{lines.length === 0 ? (fromPhoto ? t.noLinesPhoto : t.noLines) : t.allRemoved}</p>
           <div className="mt-5 max-w-xs mx-auto">
             <Button type="button" onClick={startAgain}>
               {t.again}

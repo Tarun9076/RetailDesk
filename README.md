@@ -49,7 +49,7 @@ RetailDesk lets shops see the truth up front (stock, price, scheme, credit) and 
 - See schemes on each product, like "Buy 10 cases, get 1 free" or "3% off on 5+ cases".
 - Add to cart and watch the price update live. The app nudges them: *"Add 4 more cases for 3% off"*.
 - See their available credit. If an order goes over the limit, it is not rejected. It goes to the office for approval, and the shop is told so.
-- **Order by message:** paste a WhatsApp-style list in English, Hindi or Hinglish. The app reads it into lines, and the shopkeeper checks each one before anything is ordered (see [AI order capture](#ai-order-capture)).
+- **Order by message:** paste a WhatsApp-style list in English, Hindi or Hinglish, **or take a photo of a handwritten or printed list**. The app reads it into lines, and the shopkeeper checks each one before anything is ordered (see [AI order capture](#ai-order-capture)).
 - Place the order, view past orders, and **repeat an old order in one tap**.
 - Use everything in **English or Hindi**.
 - **Download the app:** a **Download app** button is always in the header (and on the sign-in screens) until the app is installed. Where the browser allows it, one tap opens its own install dialog. Otherwise a short sheet shows the exact steps for that phone. If there is no signal, a friendly offline page appears and the cart stays safe on the phone.
@@ -105,7 +105,8 @@ RetailDesk lets shops see the truth up front (stock, price, scheme, credit) and 
 | Edit and switch off shops | Done, with tests |
 | Desk staff accounts: add, temporary passwords, reset, switch off, change own password | Done, with tests |
 | Monitoring: error log, alerts, health check, command-line backup and restore | Done, with tests |
-| Voice notes, photo of a list | Not in the core build |
+| AI order capture from a photo of a list (handwritten or printed), same review screen | Done, with tests |
+| Hindi voice notes | Not built |
 
 ## Tech stack
 
@@ -285,6 +286,8 @@ The browser uses this engine to show a live preview. When you place the order, *
 - **Credit check.** Credit used is the account balance plus orders not yet billed. Over the limit means the order goes **on hold** for the office. It is not refused.
 
 ### AI order capture
+
+**Photo of a list.** The phone shrinks the picture to 1280 px (a 371 KB test image became 61 KB) before sending it, so it uploads in seconds on 3G. The server checks what the bytes really are (JPEG, PNG or WebP, up to 3 MB; a PDF renamed .jpg is refused), limits photo reads to 8 per shop per 10 minutes, and sends the picture to Gemini together with the shop's catalogue. The picture is **not stored**; only the words read from it are kept, so the desk can see what was understood. From there it is the same as typed text: each line shows the original words, a confidence level and two alternatives, units are asked and not guessed, nothing is ordered until the shopkeeper confirms, and corrections become that shop's aliases. Unlike text there is no simpler fallback for a picture, so if the AI is down the shopkeeper is told to type the list. A blank or wrong photo gives an empty review, not invented items; instructions written inside a picture are ignored (both tested).
 
 The goal is simple: turn a messy message into an order, but **never let a wrong guess slip into an order unseen**.
 

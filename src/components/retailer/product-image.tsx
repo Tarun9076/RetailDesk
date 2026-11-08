@@ -31,7 +31,11 @@ export function ProductImage({
     <div
       className={`relative aspect-square w-full overflow-hidden rounded-2xl bg-surface ${dim ? "opacity-50 grayscale" : ""} ${className}`}
     >
-      <div className="h-full w-full p-[9%]">
+      {/* The drawing is only a stand-in: it fades away completely once the photo is there, so the two never show together. */}
+      <div
+        aria-hidden={state === "ready" || undefined}
+        className={`h-full w-full p-[9%] transition-opacity duration-200 ${state === "ready" ? "opacity-0" : "opacity-100"}`}
+      >
         <ProductArt name={name} brand={brand} />
       </div>
       {photo && (
@@ -50,7 +54,7 @@ export function ProductImage({
           }}
           onLoad={() => setState("ready")}
           onError={() => setState("failed")}
-          className={`absolute inset-0 h-full w-full bg-surface object-contain p-3 mix-blend-multiply transition-opacity duration-200 ${
+          className={`absolute inset-0 h-full w-full object-contain p-3 mix-blend-multiply transition-opacity duration-200 ${
             state === "ready" ? "opacity-100" : "opacity-0"
           }`}
         />

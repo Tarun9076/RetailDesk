@@ -3,14 +3,15 @@
 ## In scope (core build)
 - Retailer: SMS OTP login, catalogue (retailer price, GST shown, stock status, scheme), cart, place order, order history, repeat order
 - Scheme engine: free goods (buy N get M) and slab percent discounts
-- AI order capture from a text message (Gemini), with a human review step
+- AI order capture from a typed message or a photo of a list (Gemini), with a human review step
 - Order desk: email + password login, order queue, credit holds, Tally export
 - Hindi and English UI
+- Beyond the core: salesman mode with offline ordering, the 14-day no-order dashboard, catalogue admin, shop and staff management
 
 ## Cut (and why)
-- Voice-note capture: same parser interface, extra input type (photo of a list is built)
-- Salesman mode and offline sync: needs a sync layer, not part of the core slice
-- 14-day no-order dashboard: built last if time allows
+- Voice-note capture (Hindi): same pipeline as text and photo, one more input type. Not built.
+- Reading balances back from Tally, a Tally names screen and a system screen in the desk: built, then taken out because the desk does not need them yet.
+- Van and route loading lists, instant order alerts for the desk, bulk product import: next steps (see the TDD).
 - Real payments, delivery tracking, GST e-invoicing: out of scope in the brief
 
 ## Assumptions (to be repeated in the TDD)
@@ -39,13 +40,13 @@
 - A23. "No order in 14 days" is counted in Indian calendar days since the shop's latest order that was not cancelled. Exactly 14 days counts as quiet. Shops that have never ordered are listed separately, at the end.
 - A24. The WhatsApp button only opens a pre-written message in WhatsApp on the desk user's own device. Nothing is sent by the app, because messaging is mocked for this build.
 - A25. No web fonts: the app uses each phone's own system fonts (Roboto/Noto on Android, San Francisco on iPhone, Segoe UI/Nirmala on Windows). Measured on a production build, Noto Sans added about 300 KB to every first load.
-- A26. Offline use is limited to a friendly offline page and cached static files. Prices, credit and orders are never cached on the phone. Salesman offline ordering with sync is not built.
+- A26. The salesman app works offline from a copy of the shop data on the phone (A40). A shopkeeper's screens only cache the app's own files and an offline page: prices, credit and orders are never cached for shops.
 - A27. "Sales" on the dashboard means orders the desk has confirmed or exported, by order date in Indian time, after scheme discounts and before GST. Orders to check or on hold are shown as "waiting", and cancelled orders count for nothing. The comparison is with the same number of days just before.
 - A28. The Excel sales register is the main export. It is a register for the accounts team to read and enter or reconcile, not a Tally import: Tally Prime imports reliably from XML, which stays available as a secondary option. Both use the same GST split (half CGST, half SGST per rate).
 - A29. The dashboard's AI share counts every order placed in the period that was not cancelled, so a message order counts as soon as it is placed. Every order here is placed in the app, so the client's "50% in the app or by AI" goal is tracked by the AI share, the stricter half.
 - A30. "Download app" installs the web app from the browser (no app store). It uses the browser's own install dialog where one is offered, and shows step-by-step instructions where it is not (for example on iPhone).
 - A31. Charts use a brighter green than the brand green because the brand green failed the colour validator's chroma check for data marks. The app is light only, so charts have no dark mode.
-- A32. "Responsive" means the layout changes with the device (columns, tables, sticky panels), not only that nothing overflows. Breakpoints: 360 px (one product per row below it), 420 px (Sign out gets a text label), 640 px (tablet-style headers), 768 px (two-column grids), 1024 px (two-column cart and order detail, desk table), 1280 px (five products per row).
+- A32. "Responsive" means the layout changes with the device (columns, tables, sticky panels), not only that nothing overflows. Breakpoints: 360 px (one product per row below it), 400 px (the Download app button fits in the header), 640 px (tablet-style headers), 768 px (two-column grids), 1024 px (two-column cart and order detail, desk table), 1280 px (five products per row).
 - A33. Measured with a script in a real browser at 320, 375, 414, 768, 1024, 1280 and 1920 px, not on physical devices. Real phones, especially iPhones in Safari, may differ in small ways (for example the notch and install steps) and should be tried before launch.
 - A34. The desk is designed for a laptop or monitor first, and works on a tablet or phone for quick checks (approving a hold, glancing at sales). Printing the loading list is a laptop task.
 - A36. Each shop has at most one salesman, assigned by the desk (any number of shops per salesman). A salesman logs in with their own phone number and the same SMS code flow as shops. Their session lasts 7 days (shopkeepers 30 days, desk 12 hours) because the phone holds shop prices.
@@ -66,7 +67,9 @@
 - A51. The names the Tally file uses are the defaults in `src/lib/tally/voucher.ts`, with `TALLY_COMPANY` for the company. A settings screen and a checklist were built, then taken out for now; the client confirms the real names at the first trial import.
 - A52. Server errors are grouped by message, route and method, with ids and numbers flattened. Emails, phone numbers, tokens and database addresses are removed before anything is stored or sent. An alert is sent for a new problem, and again after one marked as dealt with comes back; a repeat is mentioned at most once an hour. Request bodies and headers are never kept.
 - A53. Backups are the owner's job to keep and protect. `npm run db:backup` makes a full copy (with password hashes) and `npm run db:restore` loads it into an empty database only. A desk download was taken out for now.
-- A54. Product pictures are drawn in code from the product's own name and brand (carton, pouch, bottle, tub or soap bar), so they cost no download and a new product has a picture at once. A real photo, as an https address entered on the desk's product page, replaces the drawing. Photos are not uploaded or stored by the app: the desk hosts them, and a photo that fails to load is replaced by the drawing. Photos do not work offline for salesmen; the drawing does.
+- A54. Every product has a drawn pack (carton, pouch, bottle, tub or soap bar) made in code from its name and brand, so a new product has a picture at once and nothing is downloaded. A real photo replaces the drawing when it has loaded; if it is slow or fails, the drawing stays. Photos are resized to 480 px WebP files of about 10 KB (`npm run photos`) and kept in the repository, so they are served and cached by the host; a desk user can also paste an https address. The photos are stand-in stock pictures of the same kind of product, not of the real brands, which are invented in the brief. Photos do not work offline for salesmen; the drawing does.
 - A55. The catalogue card shows the price first, then the name, GST, piece price, scheme and (only when low or out) stock. "In stock" is not written for the many products that are. The long name is cut at the first comma ("Cream biscuit 200 g, case of 48" shows as "Cream biscuit 200 g"). Whole-rupee case prices drop ".00" on the card (₹1,440); bills and totals always show paise.
-- A56. The design keeps one accent colour. Green is for actions and good news; the selected filter is dark. Sign out and Download app sit in a menu. The salesman app shares the product card, the cart bar and the quantity bar, and keeps its own header because it also carries the sync status.
+- A56. The design keeps one accent colour. Green is for actions and good news; the selected filter is dark. Sign out is always visible in the header with its word; Download app sits next to it on wider phones and laptops and on the login screen. The salesman app shares the product card, the cart bar and the quantity bar, and keeps its own header because it also carries the sync status.
 - A10. Tally export is a Tally Prime sales-voucher XML; the client's real ledger and item names are unknown.
+- A57. A photo of a list is shrunk on the phone to 1280 px, checked on the server by what the file really is (JPEG, PNG or WebP, up to 3 MB), read by the AI together with the shop's catalogue, and not stored. Only the words read from it are kept, so the desk can see what was understood. If the AI is unavailable the photo cannot be read and the shopkeeper is asked to type the list. A shop can read 8 photos in 10 minutes.
+- A58. A page that breaks shows a short message in English and Hindi with a reference number that matches the server log, and never the error's own text. A wrong address shows a matching 404 page.

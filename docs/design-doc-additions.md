@@ -76,3 +76,9 @@ A48 to A56 are in `docs/scope.md`.
 - **Privacy:** the picture is not stored; only the words read from it are.
 - **Tests:** 9 unit tests, plus 14 live checks against a production build (sample list read as 5, 2 and 1 cases in about 4 s, blank photo, fake image, oversize, signed-out, other-site and desk-user requests, rate limit, an injected instruction, a Hindi Devanagari list).
 - **Still not built:** Hindi voice notes. Handwriting was tested with a handwriting-style font, not real paper notebooks, so please also try a real photo.
+
+## 8. UI and design decisions: error and not-found states (add a row)
+
+| Constraint | What I did |
+| --- | --- |
+| Error and empty states | A broken page shows a calm message in English and Hindi with **Try again** and a way back, inside the shop or desk layout so the header and tabs stay. It shows a short reference number that matches the server log, and **never** the error's own text (checked with a page that threw a fake password). A wrong address shows a 404 page with the same look, and a last-resort page covers a failure in the layout itself. |

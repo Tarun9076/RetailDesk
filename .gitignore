@@ -62,3 +62,6 @@ next-env.d.ts
 
 # Original product photos (large); the small resized ones in public/products are committed
 /product-photos/
+
+# Reviewer copy of deployment.md with the desk password. Never committed.
+/submission/

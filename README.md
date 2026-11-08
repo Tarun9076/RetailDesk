@@ -35,7 +35,6 @@ Shopkeepers see stock, their own price and the current scheme, and order in abou
 - [Project structure](#project-structure)
 - [Testing](#testing)
 - [Security](#security)
-- [Status and limits](#status-and-limits)
 - [Documentation](#documentation)
 
 ---
@@ -186,18 +185,6 @@ Beyond unit tests, scripts were run against a production build and a real databa
 - Sign-in codes and passwords are hashed. Codes expire, work once and lock after five wrong tries. Requests are rate limited, and a user is looked up on every request, so switching someone off takes effect at once.
 - Uploaded photos are checked by their real file type and size, and are not stored.
 - No secrets are in the repository. Settings come from environment variables.
-
-## Status and limits
-
-Everything above is built and deployed. What is not done or not proven:
-
-- The Tally XML has not been imported into a real Tally, and ledger names are defaults.
-- Reading balances back from Tally was built and then removed. A shop's balance is set by the desk and raised by exported orders.
-- Photo reading was tested with generated images, not real handwriting on paper.
-- Hindi voice notes are not built.
-- There are no browser tests or CI yet, and the Hindi text has not been reviewed by a native speaker.
-
-The full list, with effort estimates, is in [deployment.md](deployment.md#7-known-limits) and [docs/scope.md](docs/scope.md).
 
 ## Documentation
 
